@@ -63,14 +63,15 @@ router.post('/:id/like', async (req, res) => {
     res.status(404).render('not-found');
     return;
   }
-  if (await store.hasVote(req.deviceId, song.id)) {
-    res.redirect(helpers.safeBackPath(req.body.back, '/songs'));
+  const claimed = await store.claimVote(req.deviceId, song.id);
+  if (!claimed) {
+    await finishLike(req, res, song.id, true);
     return;
   }
   const name = helpers.asText(req.body.name).slice(0, LIKE_NAME_LIMIT);
   const like = await data.addLike(song.id, name);
-  await store.addVote(req.deviceId, song.id, like.id);
-  res.redirect(helpers.safeBackPath(req.body.back, '/songs'));
+  await store.attachLike(req.deviceId, song.id, like.id);
+  await finishLike(req, res, song.id, true);
 });
 
 router.post('/:id/unlike', async (req, res) => {
@@ -78,7 +79,7 @@ router.post('/:id/unlike', async (req, res) => {
   if (likeId != null && likeId !== '') {
     await data.removeLike(likeId);
   }
-  res.redirect(helpers.safeBackPath(req.body.back, '/songs'));
+  await finishLike(req, res, req.params.id, false);
 });
 
 router.get('/:id/take', async (req, res) => {
@@ -142,6 +143,30 @@ const loadContext = async () => {
     participants: loaded[0],
     songs: helpers.activeSongs(helpers.enrichSongs(loaded[1], loaded[0], loaded[2])),
   };
+};
+
+const finishLike = async (req, res, songId, voted) => {
+  if (wantsJson(req)) {
+    const counts = helpers.countLikes(await data.getLikes());
+    res.json({ likes: counts[songId] == null ? 0 : counts[songId], voted: voted });
+    return;
+  }
+  res.redirect(backWithSongAnchor(req.body.back, songId));
+};
+
+const wantsJson = req => {
+  const accept = helpers.asText(req.get('accept')).toLowerCase();
+  return accept.indexOf('application/json') !== -1;
+};
+
+const backWithSongAnchor = (back, songId) => {
+  const path = helpers.safeBackPath(back, '');
+  if (path === '') {
+    return '/songs';
+  }
+  const hash = path.indexOf('#');
+  const base = hash === -1 ? path : path.slice(0, hash);
+  return base + '#song-' + encodeURIComponent(songId);
 };
 
 const renderTake = (res, song, participants, values, submitted, error) => {

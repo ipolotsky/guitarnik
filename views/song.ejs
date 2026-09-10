@@ -9,20 +9,21 @@
 <% } %>
 
 <% const voted = locals.votedSongs != null && votedSongs.has(song.id); %>
-<div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+<div class="d-flex flex-wrap align-items-center gap-2 mb-4" id="song-<%= song.id %>">
   <% if (voted) { %>
-    <form method="post" action="/songs/<%= song.id %>/unlike">
+    <form method="post" action="/songs/<%= song.id %>/unlike" data-like-song="<%= song.id %>" data-like-action="unlike">
       <input type="hidden" name="back" value="<%= locals.currentPath == null ? '/songs' : locals.currentPath %>">
+      <input type="hidden" name="name" value="">
       <button class="btn btn-primary" type="submit" title="Убрать свой голос"><i class="bi bi-heart-fill"></i> Нравится</button>
     </form>
   <% } else { %>
-    <form method="post" action="/songs/<%= song.id %>/like" data-like-song="<%= song.id %>">
+    <form method="post" action="/songs/<%= song.id %>/like" data-like-song="<%= song.id %>" data-like-action="like">
       <input type="hidden" name="back" value="<%= locals.currentPath == null ? '/songs' : locals.currentPath %>">
       <input type="hidden" name="name" value="">
       <button class="btn btn-outline-primary" type="submit"><i class="bi bi-heart"></i> Нравится</button>
     </form>
   <% } %>
-  <span class="badge text-bg-secondary"><%= song.likes %></span>
+  <span class="badge text-bg-secondary" data-like-count="<%= song.id %>"><%= song.likes %></span>
   <% if (song.isOpenWish) { %>
     <a class="btn btn-primary" href="/songs/<%= song.id %>/take">Беру!</a>
   <% } %>

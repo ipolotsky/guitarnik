@@ -43,10 +43,10 @@ const MUTATIONS = [
     replace: '',
   },
   {
-    name: 'hasVote всегда говорит, что голоса не было',
+    name: 'привязка лайка к голосу теряется',
     file: 'lib/store.js',
-    find: '  return result.rows.length > 0;\n}\n\nasync function addVote',
-    replace: '  return false;\n}\n\nasync function addVote',
+    find: "    'UPDATE votes SET like_id = $1 WHERE device = $2 AND song_id = $3',",
+    replace: "    'UPDATE votes SET like_id = like_id WHERE device = $2 AND song_id = $3 AND $1 <> $1',",
   },
   {
     name: 'takeVote не удаляет голос',
@@ -55,10 +55,10 @@ const MUTATIONS = [
     replace: "  const result = await db.query(\n    'SELECT like_id FROM votes WHERE device = $1 AND song_id = $2',\n    [id, String(songId)],\n  );",
   },
   {
-    name: 'лайк не проверяет прежний голос устройства',
+    name: 'лайк ставится даже когда голос уже был',
     file: 'routes/songs.js',
-    find: 'if (await store.hasVote(req.deviceId, song.id)) {',
-    replace: 'if (false) {',
+    find: '  if (!claimed) {',
+    replace: '  if (false) {',
   },
   {
     name: 'лайнап считается опубликованным всегда',
@@ -125,6 +125,36 @@ const MUTATIONS = [
     file: 'views/partials/who.ejs',
     find: 'const whoCrowded = participants.length > 10;',
     replace: 'const whoCrowded = false;',
+  },
+  {
+    name: 'редирект после лайка теряет якорь',
+    file: 'routes/songs.js',
+    find: "  return base + '#song-' + encodeURIComponent(songId);",
+    replace: '  return base;',
+  },
+  {
+    name: 'лайк отвечает JSON без учета заголовка',
+    file: 'routes/songs.js',
+    find: "  return accept.indexOf('application/json') !== -1;",
+    replace: '  return false;',
+  },
+  {
+    name: 'заявка на голос всегда считается успешной',
+    file: 'lib/store.js',
+    find: '  return result.rows.length > 0;\n}\n\nasync function attachLike',
+    replace: '  return true;\n}\n\nasync function attachLike',
+  },
+  {
+    name: 'выгрузка снова без голосов',
+    file: 'routes/admin.js',
+    find: '    votes: loaded[3],',
+    replace: '    votes: [],',
+  },
+  {
+    name: 'удаление участника не чистит состав песен',
+    file: 'routes/admin.js',
+    find: '      patch.performers = performers.filter(x => x !== id);',
+    replace: '      patch.performers = performers;',
   },
   {
     name: 'ссылка на текст рендерится без проверки',

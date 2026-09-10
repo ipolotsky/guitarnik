@@ -164,20 +164,91 @@ const rememberParticipant = select => {
 };
 
 const setupLikes = () => {
-  const forms = document.querySelectorAll('[data-like-song]');
+  const forms = Array.from(document.querySelectorAll('[data-like-song]'));
   if (forms.length === 0) {
     return;
   }
   const participant = readStored(PARTICIPANT_KEY);
-  if (participant == null || !participant.name) {
+  forms.forEach(form => {
+    if (participant != null && participant.name) {
+      const nameInput = form.querySelector('input[name="name"]');
+      if (nameInput != null) {
+        nameInput.value = participant.name;
+      }
+    }
+    form.addEventListener('submit', event => {
+      sendLike(event, form);
+    });
+  });
+};
+
+const sendLike = (event, form) => {
+  if (window.fetch == null || window.FormData == null) {
     return;
   }
-  forms.forEach(form => {
-    const nameInput = form.querySelector('input[name="name"]');
-    if (nameInput != null) {
-      nameInput.value = participant.name;
+  event.preventDefault();
+  const button = form.querySelector('button[type="submit"]');
+  if (button != null) {
+    button.disabled = true;
+  }
+  window.fetch(form.action, {
+    method: 'post',
+    credentials: 'same-origin',
+    headers: { accept: 'application/json' },
+    body: new URLSearchParams(new FormData(form)),
+  }).then(response => {
+    if (!response.ok) {
+      throw new Error('like request failed');
     }
+    return response.json();
+  }).then(result => {
+    if (button != null) {
+      button.disabled = false;
+    }
+    applyLike(form, result);
+  }).catch(() => {
+    if (button != null) {
+      button.disabled = false;
+    }
+    form.submit();
   });
+};
+
+const applyLike = (form, result) => {
+  const songId = form.getAttribute('data-like-song');
+  const voted = result.voted === true;
+  form.setAttribute('data-like-action', voted ? 'unlike' : 'like');
+  form.setAttribute('action', '/songs/' + encodeURIComponent(songId) + (voted ? '/unlike' : '/like'));
+  const button = form.querySelector('button[type="submit"]');
+  if (button != null) {
+    button.classList.toggle('btn-primary', voted);
+    button.classList.toggle('btn-outline-primary', !voted);
+    button.title = voted ? 'Убрать свой голос' : '';
+    const icon = button.querySelector('i');
+    if (icon != null) {
+      icon.classList.toggle('bi-heart-fill', voted);
+      icon.classList.toggle('bi-heart', !voted);
+    }
+  }
+  if (typeof result.likes !== 'number') {
+    return;
+  }
+  Array.from(document.querySelectorAll('[data-like-count]'))
+    .filter(x => x.getAttribute('data-like-count') === songId)
+    .forEach(x => {
+      writeLikeCount(x, String(result.likes));
+    });
+};
+
+const writeLikeCount = (element, value) => {
+  const icon = element.querySelector('i');
+  if (icon == null) {
+    element.textContent = value;
+    return;
+  }
+  element.textContent = '';
+  element.appendChild(icon);
+  element.appendChild(document.createTextNode(' ' + value));
 };
 
 const setupPartners = () => {

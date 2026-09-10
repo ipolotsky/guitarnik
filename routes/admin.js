@@ -8,6 +8,8 @@ const sheetsAdmin = require('../lib/sheetsAdmin');
 const backup = require('../lib/backup');
 const sync = require('../lib/sync');
 const lineup = require('../lib/lineup');
+const store = require('../lib/store');
+const database = require('../lib/db');
 
 const TABS = ['summary', 'lineup', 'participants', 'songs', 'likes'];
 const EXPORTED_STATUSES = [reference.STATUS_DECLARED, reference.STATUS_SETLIST];
@@ -93,15 +95,6 @@ router.post('/lineup/:id/delete', async (req, res) => {
   res.redirect('/admin?tab=lineup');
 });
 
-router.post('/backup', (req, res) => {
-  try {
-    backup.run();
-    res.redirect('/admin?tab=summary&notice=backup');
-  } catch (error) {
-    res.redirect(noticeUrl('summary', `error:${error.message}`));
-  }
-});
-
 router.post('/sync/push', async (req, res) => {
   try {
     await sync.pushAll();
@@ -121,9 +114,54 @@ router.post('/sync/pull', async (req, res) => {
 });
 
 router.get('/export/data.json', async (req, res) => {
-  const loaded = await Promise.all([data.getParticipants(), data.getSongs(), data.getLikes()]);
-  res.json({ participants: loaded[0], songs: loaded[1], likes: loaded[2] });
+  const loaded = await Promise.all([
+    data.getParticipants(),
+    data.getSongs(),
+    data.getLikes(),
+    store.allVotes(),
+    lineup.getItems(),
+    database.allMeta(),
+  ]);
+  res.json({
+    participants: loaded[0],
+    songs: loaded[1],
+    likes: loaded[2],
+    votes: loaded[3],
+    lineup: loaded[4],
+    meta: loaded[5],
+  });
 });
+
+router.post('/participants/:id/delete', async (req, res) => {
+  try {
+    await purgeParticipant(req.params.id);
+    res.redirect(noticeUrl('participants', 'participant'));
+  } catch (error) {
+    res.redirect(noticeUrl('participants', `error:${error.message}`));
+  }
+});
+
+async function purgeParticipant(id) {
+  const participants = await data.getParticipants();
+  if (participants.find(x => x.id === id) == null) {
+    throw new Error('Такого участника уже нет, страница обновилась');
+  }
+  const songs = await data.getSongs();
+  for (const song of songs) {
+    const patch = {};
+    const performers = helpers.splitList(song.performers);
+    if (performers.indexOf(id) >= 0) {
+      patch.performers = performers.filter(x => x !== id);
+    }
+    if (helpers.asText(song.added_by) === id) {
+      patch.added_by = '';
+    }
+    if (Object.keys(patch).length > 0) {
+      await data.updateSong(song.id, patch);
+    }
+  }
+  await data.removeParticipant(id);
+}
 
 router.post('/songs/:id/status', async (req, res) => {
   const status = bodyField(req, 'status');
@@ -293,8 +331,8 @@ function lineupCandidates(songs, items) {
 
 function pickNotice(value) {
   const text = typeof value === 'string' ? value : '';
-  if (text === 'backup') {
-    return { kind: 'success', text: 'Бекап сделан' };
+  if (text === 'participant') {
+    return { kind: 'success', text: 'Участник удален, песни остались на месте' };
   }
   if (text === 'push') {
     return { kind: 'success', text: 'Данные выгружены в таблицу' };

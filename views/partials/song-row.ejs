@@ -1,5 +1,5 @@
 <% const rowVoted = locals.votedSongs != null && votedSongs.has(song.id); -%>
-<div class="list-group-item d-flex flex-wrap align-items-center gap-2 py-3">
+<div class="list-group-item d-flex flex-wrap align-items-center gap-2 py-3" id="song-<%= song.id %>">
   <div class="flex-grow-1 song-line">
     <a class="link-body-emphasis text-decoration-none fw-semibold" href="/songs/<%= song.id %>"><%= song.title %></a>
     <% if (song.original_artist) { %>
@@ -20,15 +20,16 @@
     </div>
   </div>
   <% if (rowVoted) { %>
-    <form method="post" action="/songs/<%= song.id %>/unlike">
-      <input type="hidden" name="back" value="<%= locals.currentPath == null ? '/songs' : locals.currentPath %>">
-      <button class="btn btn-primary btn-sm" type="submit" title="Убрать свой голос"><i class="bi bi-heart-fill"></i> <%= song.likes %></button>
-    </form>
-  <% } else { %>
-    <form method="post" action="/songs/<%= song.id %>/like" data-like-song="<%= song.id %>">
+    <form method="post" action="/songs/<%= song.id %>/unlike" data-like-song="<%= song.id %>" data-like-action="unlike">
       <input type="hidden" name="back" value="<%= locals.currentPath == null ? '/songs' : locals.currentPath %>">
       <input type="hidden" name="name" value="">
-      <button class="btn btn-outline-primary btn-sm" type="submit"><i class="bi bi-heart"></i> <%= song.likes %></button>
+      <button class="btn btn-primary btn-sm" type="submit" title="Убрать свой голос" data-like-count="<%= song.id %>"><i class="bi bi-heart-fill"></i> <%= song.likes %></button>
+    </form>
+  <% } else { %>
+    <form method="post" action="/songs/<%= song.id %>/like" data-like-song="<%= song.id %>" data-like-action="like">
+      <input type="hidden" name="back" value="<%= locals.currentPath == null ? '/songs' : locals.currentPath %>">
+      <input type="hidden" name="name" value="">
+      <button class="btn btn-outline-primary btn-sm" type="submit" data-like-count="<%= song.id %>"><i class="bi bi-heart"></i> <%= song.likes %></button>
     </form>
   <% } %>
   <% if (mode === 'wish') { %>

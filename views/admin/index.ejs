@@ -41,7 +41,7 @@
     <div class="card-body">
       <h2 class="h5 card-title">Хранилище</h2>
       <p class="mb-2">
-        Данные лежат в базе на сервере: участников <%= backupStatus.counts.participants %>, песен <%= backupStatus.counts.songs %>, лайков <%= backupStatus.counts.likes %>.
+        Данные лежат в PostgreSQL: участников <%= backupStatus.counts.participants %>, песен <%= backupStatus.counts.songs %>, лайков <%= backupStatus.counts.likes %>.
       </p>
       <p class="mb-2">
         <% if (!syncStatus.configured) { %>
@@ -58,16 +58,9 @@
         <% } %>
       </p>
       <p class="mb-3">
-        <% if (backupStatus.at) { %>
-          Последний бекап <%= shortDate(backupStatus.at) %>, всего файлов <%= backupStatus.files.length %>. Бекап делается каждую ночь.
-        <% } else { %>
-          Бекапов еще нет, первый сделается ночью.
-        <% } %>
+        Бекапами занимается <%= backupStatus.tool %>: его панель открывается по адресу <%= backupStatus.url %> через ssh-туннель до сервера.
       </p>
       <div class="d-flex flex-wrap gap-2">
-        <form method="post" action="/admin/backup">
-          <button class="btn btn-outline-secondary btn-sm" type="submit">Сделать бекап сейчас</button>
-        </form>
         <% if (syncStatus.configured) { %>
           <form method="post" action="/admin/sync/push">
             <button class="btn btn-outline-secondary btn-sm" type="submit">Выгрузить все в таблицу</button>
@@ -276,12 +269,15 @@
 <% } %>
 
 <% if (tab === 'participants') { %>
+  <p class="text-body-secondary">
+    Удаление убирает участника из состава песен, сами песни остаются; в Google-таблице его строка исчезнет только после следующей полной выгрузки.
+  </p>
   <div class="table-responsive">
-    <table class="table table-sm table-striped">
+    <table class="table table-sm table-striped align-middle">
       <thead>
         <tr>
           <th>Имя</th><th>Телеграм</th><th>Инструменты</th><th>Готов подыграть</th>
-          <th>На чем подыграет</th><th>О себе</th><th>Добавлен</th>
+          <th>На чем подыграет</th><th>О себе</th><th>Добавлен</th><th></th>
         </tr>
       </thead>
       <tbody>
@@ -294,6 +290,11 @@
             <td><%= x.help_instruments %></td>
             <td><%= x.about %></td>
             <td><%= shortDate(x.created_at) %></td>
+            <td>
+              <form method="post" action="/admin/participants/<%= x.id %>/delete">
+                <button class="btn btn-sm btn-outline-secondary" type="submit">Удалить</button>
+              </form>
+            </td>
           </tr>
         <% }); %>
       </tbody>
