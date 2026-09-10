@@ -99,6 +99,44 @@ const setupWho = () => {
     toggleNewBlock(select, newBlock);
     rememberParticipant(select);
   });
+  setupWhoSearch(select);
+};
+
+const setupWhoSearch = select => {
+  const search = document.querySelector('[data-who-search]');
+  if (search == null) {
+    return;
+  }
+  const all = Array.from(select.options).map(option => ({
+    value: option.value,
+    label: option.textContent,
+    haystack: option.textContent.toLowerCase(),
+  }));
+  search.addEventListener('input', () => {
+    const needle = search.value.trim().toLowerCase();
+    const chosen = select.value;
+    const visible = all.filter(x => x.value === '' || x.value === NEW_PARTICIPANT_OPTION || needle === '' || x.haystack.indexOf(needle) !== -1);
+    select.textContent = '';
+    visible.forEach(x => {
+      const option = document.createElement('option');
+      option.value = x.value;
+      option.textContent = x.label;
+      const source = all.find(y => y.value === x.value);
+      if (source != null) {
+        option.setAttribute('data-name', nameFromLabel(source.label));
+      }
+      select.appendChild(option);
+    });
+    if (visible.some(x => x.value === chosen)) {
+      select.value = chosen;
+    }
+  });
+};
+
+const nameFromLabel = label => {
+  const text = String(label).trim();
+  const separator = text.indexOf(NAME_SEPARATOR);
+  return separator === -1 ? text : text.slice(0, separator);
 };
 
 const toggleNewBlock = (select, newBlock) => {

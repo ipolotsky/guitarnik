@@ -11,7 +11,7 @@ router.get('/', async (req, res) => {
 
 router.get('/perform', async (req, res) => {
   const participants = await data.getParticipants();
-  renderPerform(res, participants, {}, false, null);
+  renderPerform(res, participants, {}, false, null, null);
 });
 
 router.post('/perform', async (req, res) => {
@@ -20,6 +20,11 @@ router.post('/perform', async (req, res) => {
     const title = helpers.asText(req.body.title);
     if (title === '') {
       throw new helpers.FormError('Напиши название песни');
+    }
+    const twin = await findTwin(title, req.body);
+    if (twin != null) {
+      renderPerform(res, participants, req.body, true, null, twin);
+      return;
     }
     const who = await helpers.resolveWho(req.body, participants);
     const partnerIds = await helpers.resolvePartners(req.body, participants);
@@ -54,13 +59,13 @@ router.post('/perform', async (req, res) => {
     if (error.name !== 'FormError') {
       throw error;
     }
-    renderPerform(res, participants, req.body, true, error.message);
+    renderPerform(res, participants, req.body, true, error.message, null);
   }
 });
 
 router.get('/wish', async (req, res) => {
   const participants = await data.getParticipants();
-  renderWish(res, participants, {}, false, null);
+  renderWish(res, participants, {}, false, null, null);
 });
 
 router.post('/wish', async (req, res) => {
@@ -69,6 +74,11 @@ router.post('/wish', async (req, res) => {
     const title = helpers.asText(req.body.title);
     if (title === '') {
       throw new helpers.FormError('Напиши название песни');
+    }
+    const twin = await findTwin(title, req.body);
+    if (twin != null) {
+      renderWish(res, participants, req.body, true, null, twin);
+      return;
     }
     const who = helpers.asText(req.body.participant_id) === ''
       ? null
@@ -98,11 +108,24 @@ router.post('/wish', async (req, res) => {
     if (error.name !== 'FormError') {
       throw error;
     }
-    renderWish(res, participants, req.body, true, error.message);
+    renderWish(res, participants, req.body, true, error.message, null);
   }
 });
 
-const renderPerform = (res, participants, values, submitted, error) => {
+const findTwin = async (title, body) => {
+  if (helpers.asText(body.confirm) === '1') {
+    return null;
+  }
+  const needle = title.toLowerCase();
+  const songs = helpers.activeSongs(await data.getSongs());
+  const found = songs.find(x => helpers.asText(x.title).toLowerCase() === needle);
+  if (found == null) {
+    return null;
+  }
+  return { id: found.id, title: found.title, originalArtist: helpers.asText(found.original_artist) };
+};
+
+const renderPerform = (res, participants, values, submitted, error, twin) => {
   res.render('add-perform', {
     title: 'Я сыграю сам',
     active: 'add',
@@ -112,10 +135,11 @@ const renderPerform = (res, participants, values, submitted, error) => {
     values: values,
     submitted: submitted,
     error: error,
+    twin: twin == null ? null : twin,
   });
 };
 
-const renderWish = (res, participants, values, submitted, error) => {
+const renderWish = (res, participants, values, submitted, error, twin) => {
   res.render('add-wish', {
     title: 'Заказать песню',
     active: 'add',
@@ -123,6 +147,7 @@ const renderWish = (res, participants, values, submitted, error) => {
     values: values,
     submitted: submitted,
     error: error,
+    twin: twin == null ? null : twin,
   });
 };
 

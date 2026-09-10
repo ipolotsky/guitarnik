@@ -31,6 +31,11 @@
   <span class="text-body-secondary">Сортировка:</span>
   <a class="btn btn-sm <%= sort === 'likes' ? 'btn-primary' : 'btn-outline-primary' %>" href="<%= links.sortLikes %>">по лайкам</a>
   <a class="btn btn-sm <%= sort === 'new' ? 'btn-primary' : 'btn-outline-primary' %>" href="<%= links.sortNew %>">сначала новые</a>
+  <% if (helpCount > 0 || onlyHelp) { %>
+    <a class="btn btn-sm <%= onlyHelp ? 'btn-primary' : 'btn-outline-primary' %>" href="<%= onlyHelp ? links.helpOff : links.helpOn %>">
+      <i class="bi bi-people"></i> нужны музыканты<%= onlyHelp ? '' : ': ' + helpCount %>
+    </a>
+  <% } %>
   <span class="ms-sm-auto d-flex gap-2">
     <a class="btn btn-sm <%= view === 'list' ? 'btn-primary' : 'btn-outline-primary' %>" href="<%= links.viewList %>" title="Списком"><i class="bi bi-list-ul"></i></a>
     <a class="btn btn-sm <%= view === 'cards' ? 'btn-primary' : 'btn-outline-primary' %>" href="<%= links.viewCards %>" title="Карточками"><i class="bi bi-grid"></i></a>

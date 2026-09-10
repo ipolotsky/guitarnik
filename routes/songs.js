@@ -19,8 +19,10 @@ router.get('/', async (req, res) => {
   const sort = SORTS.indexOf(req.query.sort) === -1 ? 'likes' : req.query.sort;
   const query = typeof req.query.q === 'string' ? req.query.q.trim() : '';
   const view = VIEWS.indexOf(req.query.view) === -1 ? 'list' : req.query.view;
+  const onlyHelp = req.query.help === '1';
   const context = await loadContext();
-  const list = tab === 'wish' ? helpers.openWishes(context.songs) : helpers.playableSongs(context.songs);
+  const base = tab === 'wish' ? helpers.openWishes(context.songs) : helpers.playableSongs(context.songs);
+  const list = onlyHelp ? base.filter(x => x.needsMusicians) : base;
   res.render('songs', {
     title: 'Песни',
     active: 'songs',
@@ -28,14 +30,18 @@ router.get('/', async (req, res) => {
     sort: sort,
     query: query,
     view: view,
+    onlyHelp: onlyHelp,
+    helpCount: base.filter(x => x.needsMusicians).length,
     songs: helpers.sortSongs(helpers.filterSongs(list, query), sort),
     links: {
-      tabPlay: songsUrl('play', sort, query, view),
-      tabWish: songsUrl('wish', sort, query, view),
-      sortLikes: songsUrl(tab, 'likes', query, view),
-      sortNew: songsUrl(tab, 'new', query, view),
-      viewList: songsUrl(tab, sort, query, 'list'),
-      viewCards: songsUrl(tab, sort, query, 'cards'),
+      tabPlay: songsUrl('play', sort, query, view, onlyHelp),
+      tabWish: songsUrl('wish', sort, query, view, onlyHelp),
+      sortLikes: songsUrl(tab, 'likes', query, view, onlyHelp),
+      sortNew: songsUrl(tab, 'new', query, view, onlyHelp),
+      viewList: songsUrl(tab, sort, query, 'list', onlyHelp),
+      viewCards: songsUrl(tab, sort, query, 'cards', onlyHelp),
+      helpOn: songsUrl(tab, sort, query, view, true),
+      helpOff: songsUrl(tab, sort, query, view, false),
     },
   });
 });
@@ -152,7 +158,7 @@ const renderTake = (res, song, participants, values, submitted, error) => {
   });
 };
 
-const songsUrl = (tab, sort, query, view) => {
+const songsUrl = (tab, sort, query, view, onlyHelp) => {
   const params = new URLSearchParams();
   if (tab !== 'play') {
     params.set('tab', tab);
@@ -165,6 +171,9 @@ const songsUrl = (tab, sort, query, view) => {
   }
   if (view !== 'list') {
     params.set('view', view);
+  }
+  if (onlyHelp === true) {
+    params.set('help', '1');
   }
   const search = params.toString();
   return search === '' ? '/songs' : '/songs?' + search;

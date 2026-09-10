@@ -11,8 +11,15 @@
     <% } else if (song.performerNames.length > 0) { %>
       <p class="mb-2">играют: <%= song.performerNames.join(', ') %></p>
     <% } %>
-    <% if (mode !== 'wish' && song.status && song.status !== reference.STATUS_DECLARED) { %>
-      <p class="mb-2"><span class="badge text-bg-secondary"><%= song.status %></span></p>
+    <% if ((mode !== 'wish' && song.status && song.status !== reference.STATUS_DECLARED) || song.needsMusicians) { %>
+      <p class="mb-2">
+        <% if (mode !== 'wish' && song.status && song.status !== reference.STATUS_DECLARED) { %>
+          <span class="badge text-bg-secondary"><%= song.status %></span>
+        <% } %>
+        <% if (song.needsMusicians) { %>
+          <span class="badge text-bg-primary">нужны музыканты</span>
+        <% } %>
+      </p>
     <% } %>
     <% const voted = locals.votedSongs != null && votedSongs.has(song.id); %>
     <div class="d-flex flex-wrap align-items-center gap-2 mt-auto pt-2">

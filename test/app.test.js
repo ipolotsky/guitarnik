@@ -326,6 +326,75 @@ test('лайнап: скрыт, собирается, переставляетс
   assert.match(closed.text, /Лайнап еще не опубликован/);
 });
 
+test('сайт предупреждает о песне с тем же названием', async t => {
+  const server = await support.startServer();
+  t.after(() => server.stop());
+  const guest = support.createClient(server.base);
+
+  await guest.post('/helpers/join', { participant_id: '__new__', new_name: 'Аня', help_instruments: 'вокал' });
+  const form = await guest.get('/add/perform');
+  const participantId = idFrom(form.text, 'p_');
+  await guest.post('/add/perform', { participant_id: participantId, title: 'Кукушка', original_artist: 'Кино' });
+
+  const twin = await guest.post('/add/perform', { participant_id: participantId, title: 'кукушка' });
+  assert.match(twin.text, /уже есть/, 'предупреждение про такую же песню');
+  assert.match(twin.text, /Все равно добавить/);
+  const listAfterWarning = await guest.get('/songs');
+  assert.equal((listAfterWarning.text.match(/Кукушка/g) || []).length, 1, 'вторая песня еще не создана');
+
+  const forced = await guest.post('/add/perform', { participant_id: participantId, title: 'кукушка', confirm: '1' });
+  assert.match(forced.text, /Песня добавлена/);
+  const listAfterForce = await guest.get('/songs');
+  assert.equal((listAfterForce.text.match(/[Кк]укушка/g) || []).length, 2, 'после подтверждения песня добавлена');
+
+  const wishTwin = await guest.post('/add/wish', { title: 'КУКУШКА' });
+  assert.match(wishTwin.text, /уже заказывали|уже играют/);
+});
+
+test('песни, которым нужны музыканты, видно отдельно', async t => {
+  const server = await support.startServer();
+  t.after(() => server.stop());
+  const guest = support.createClient(server.base);
+
+  await guest.post('/helpers/join', { participant_id: '__new__', new_name: 'Аня', help_instruments: 'вокал' });
+  const form = await guest.get('/add/perform');
+  const participantId = idFrom(form.text, 'p_');
+  await guest.post('/add/perform', { participant_id: participantId, title: 'Сам справлюсь' });
+  await guest.post('/add/perform', {
+    participant_id: participantId,
+    title: 'Нужен басист',
+    need_musicians: 'нужен бас и кахон',
+  });
+
+  const all = await guest.get('/songs');
+  assert.match(all.text, /нужны музыканты/, 'бейдж на песне с просьбой');
+  assert.match(all.text, /нужны музыканты: 1/, 'счетчик в фильтре');
+
+  const filtered = await guest.get('/songs?help=1');
+  assert.match(filtered.text, /Нужен басист/);
+  assert.doesNotMatch(filtered.text, /Сам справлюсь/, 'фильтр оставляет только тех, кому нужна помощь');
+});
+
+test('при большом списке участников появляется поиск по себе', async t => {
+  const server = await support.startServer();
+  t.after(() => server.stop());
+  const guest = support.createClient(server.base);
+
+  const small = await guest.get('/add/perform');
+  assert.doesNotMatch(small.text, /data-who-search/, 'на коротком списке поиск не нужен');
+
+  for (let i = 0; i < 11; i += 1) {
+    await guest.post('/helpers/join', {
+      participant_id: '__new__',
+      new_name: `Участник ${i}`,
+      help_instruments: 'вокал',
+    });
+  }
+
+  const crowded = await guest.get('/add/perform');
+  assert.match(crowded.text, /data-who-search/, 'на длинном списке появляется поиск');
+});
+
 test('вкладки, поиск и вид списка не сбрасывают друг друга', async t => {
   const server = await support.startServer();
   t.after(() => server.stop());

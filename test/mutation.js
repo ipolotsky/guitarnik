@@ -97,6 +97,36 @@ const MUTATIONS = [
     replace: '    const who = await helpers.resolveWho(req.body, participants);',
   },
   {
+    name: 'проверка на дубликат отключена',
+    file: 'routes/add.js',
+    find: '  const needle = title.toLowerCase();',
+    replace: '  return null;\n  const needle = title.toLowerCase();',
+  },
+  {
+    name: 'дубликат ищется с учетом регистра',
+    file: 'routes/add.js',
+    find: 'const found = songs.find(x => helpers.asText(x.title).toLowerCase() === needle);',
+    replace: 'const found = songs.find(x => helpers.asText(x.title) === needle);',
+  },
+  {
+    name: 'фильтр нужны музыканты ничего не фильтрует',
+    file: 'routes/songs.js',
+    find: 'const list = onlyHelp ? base.filter(x => x.needsMusicians) : base;',
+    replace: 'const list = base;',
+  },
+  {
+    name: 'признак нужны музыканты всегда выключен',
+    file: 'lib/helpers.js',
+    find: "needsMusicians: asText(song.need_musicians) !== '',",
+    replace: 'needsMusicians: false,',
+  },
+  {
+    name: 'поиск по участникам не появляется на длинном списке',
+    file: 'views/partials/who.ejs',
+    find: 'const whoCrowded = participants.length > 10;',
+    replace: 'const whoCrowded = false;',
+  },
+  {
     name: 'ссылка на текст рендерится без проверки',
     file: 'views/song.ejs',
     find: '<% if (song.lyricsUrlSafe != null) { %>',

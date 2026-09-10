@@ -75,7 +75,7 @@ router.post('/join', async (req, res) => {
       participant: { id: participant.id, name: participant.name },
       text: 'Теперь тебя видно на странице музыкантов. Посмотри, кому нужна помощь.',
       links: [
-        { href: '/songs?tab=play', label: 'Песни, где нужны музыканты', primary: true },
+        { href: '/songs?help=1', label: 'Песни, где нужны музыканты', primary: true },
         { href: '/songs?tab=wish', label: 'Хотелки без исполнителя', primary: false },
       ],
     });
