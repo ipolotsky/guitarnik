@@ -6,6 +6,8 @@ cd "$(dirname "$0")"
 git fetch --prune origin
 git reset --hard origin/main
 
+mkdir -p data
+
 docker compose up -d --build
 docker image prune -f >/dev/null
 
