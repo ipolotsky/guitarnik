@@ -1,0 +1,40 @@
+<%- include('partials/header', { title: 'Лайнап', active: 'lineup' }) %>
+
+<h1 class="mb-3">Лайнап</h1>
+
+<% if (!published) { %>
+  <div class="alert alert-secondary">
+    Лайнап еще не опубликован, ожидайте. Как только организаторы соберут порядок песен, он появится здесь.
+  </div>
+  <p><a href="/songs">Посмотреть, что уже заявлено</a></p>
+<% } else if (items.length === 0) { %>
+  <div class="alert alert-secondary">
+    Лайнап опубликован, но в нем пока ни одной песни.
+  </div>
+<% } else { %>
+  <p class="mb-4">Порядок вечера. Перерывы отмечены отдельно.</p>
+  <div class="list-group">
+    <% items.forEach(item => { %>
+      <% if (item.kind === 'break') { %>
+        <div class="list-group-item text-center text-body-secondary py-3">
+          <i class="bi bi-cup-hot"></i> <%= item.label %>
+        </div>
+      <% } else { %>
+        <div class="list-group-item d-flex flex-wrap align-items-center gap-2 py-3">
+          <span class="badge text-bg-primary"><%= item.number %></span>
+          <div class="flex-grow-1 song-line">
+            <a class="link-body-emphasis text-decoration-none fw-semibold" href="/songs/<%= item.song.id %>"><%= item.song.title %></a>
+            <% if (item.song.original_artist) { %>
+              <span class="text-body-secondary"> — <%= item.song.original_artist %></span>
+            <% } %>
+            <% if (item.song.performerNames.length > 0) { %>
+              <div class="small text-body-secondary">играют: <%= item.song.performerNames.join(', ') %></div>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
+    <% }) %>
+  </div>
+<% } %>
+
+<%- include('partials/footer') %>

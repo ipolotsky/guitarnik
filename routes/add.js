@@ -70,12 +70,14 @@ router.post('/wish', async (req, res) => {
     if (title === '') {
       throw new helpers.FormError('Напиши название песни');
     }
-    const who = await helpers.resolveWho(req.body, participants);
+    const who = helpers.asText(req.body.participant_id) === ''
+      ? null
+      : await helpers.resolveWho(req.body, participants);
     await data.addSong({
       title: title,
       original_artist: helpers.asText(req.body.original_artist),
       type: 'wish',
-      added_by: who.id,
+      added_by: who == null ? '' : who.id,
       performers: '',
       lyrics: helpers.asText(req.body.lyrics),
       lyrics_url: helpers.asText(req.body.lyrics_url),
@@ -85,7 +87,7 @@ router.post('/wish', async (req, res) => {
     res.render('done', {
       title: 'Заказ добавлен',
       active: 'add',
-      participant: { id: who.id, name: who.name },
+      participant: who == null ? null : { id: who.id, name: who.name },
       text: 'Теперь её видно всем на вкладке «Хотелки». Позови друзей полайкать — чем больше лайков, тем выше шанс, что кто-то возьмётся.',
       links: [
         { href: '/songs?tab=wish', label: 'Посмотреть хотелки', primary: true },

@@ -57,13 +57,21 @@ router.post('/:id/like', async (req, res) => {
     res.status(404).render('not-found');
     return;
   }
-  if (store.hasVote(req.deviceId, song.id)) {
+  if (await store.hasVote(req.deviceId, song.id)) {
     res.redirect(helpers.safeBackPath(req.body.back, '/songs'));
     return;
   }
   const name = helpers.asText(req.body.name).slice(0, LIKE_NAME_LIMIT);
-  await data.addLike(song.id, name);
-  store.addVote(req.deviceId, song.id);
+  const like = await data.addLike(song.id, name);
+  await store.addVote(req.deviceId, song.id, like.id);
+  res.redirect(helpers.safeBackPath(req.body.back, '/songs'));
+});
+
+router.post('/:id/unlike', async (req, res) => {
+  const likeId = await store.takeVote(req.deviceId, req.params.id);
+  if (likeId != null && likeId !== '') {
+    await data.removeLike(likeId);
+  }
   res.redirect(helpers.safeBackPath(req.body.back, '/songs'));
 });
 

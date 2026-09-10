@@ -7,16 +7,19 @@
 <% } %>
 
 <form method="post" action="/add/wish">
-  <%- include('partials/who') %>
-
   <div class="mb-4">
     <label class="form-label fw-semibold" for="title">Название песни</label>
     <input class="form-control form-control-lg" type="text" id="title" name="title" value="<%= values.title == null ? '' : values.title %>" required>
   </div>
 
   <details class="border rounded p-3 mb-4"<%= submitted ? ' open' : '' %>>
-    <summary class="fw-semibold">Еще детали <span class="fw-normal text-body-secondary">— автор, текст, пара слов о песне</span></summary>
+    <summary class="fw-semibold">Еще детали <span class="fw-normal text-body-secondary">— автор, текст, кто заказывает</span></summary>
     <div class="pt-3">
+      <div class="mb-4">
+        <div class="form-text mb-2">Заказать можно молча. Если хочешь, отметься, тогда в списке будет видно, чья это хотелка</div>
+        <%- include('partials/who', { whoOptional: true }) %>
+      </div>
+
       <div class="mb-3">
         <label class="form-label" for="original_artist">Автор оригинала</label>
         <input class="form-control" type="text" id="original_artist" name="original_artist" value="<%= values.original_artist == null ? '' : values.original_artist %>">

@@ -19,6 +19,9 @@
     <a class="nav-link <%= tab === 'summary' ? 'active' : '' %>" href="/admin?tab=summary">Сводка</a>
   </li>
   <li class="nav-item">
+    <a class="nav-link <%= tab === 'lineup' ? 'active' : '' %>" href="/admin?tab=lineup">Лайнап</a>
+  </li>
+  <li class="nav-item">
     <a class="nav-link <%= tab === 'participants' ? 'active' : '' %>" href="/admin?tab=participants">Участники</a>
   </li>
   <li class="nav-item">
@@ -161,6 +164,113 @@
           <% }); %>
         </tbody>
       </table>
+    </div>
+  <% } %>
+<% } %>
+
+<% if (tab === 'lineup') { %>
+  <div class="card mb-4">
+    <div class="card-body">
+      <h2 class="h5 card-title">Публикация</h2>
+      <p class="mb-3">
+        <% if (lineupPublished) { %>
+          Лайнап опубликован: посетители видят порядок песен на странице «Лайнап».
+        <% } else { %>
+          Лайнап скрыт: посетители видят сообщение, что он еще не опубликован.
+        <% } %>
+      </p>
+      <div class="d-flex flex-wrap gap-2">
+        <form method="post" action="/admin/lineup/publish">
+          <input type="hidden" name="publish" value="<%= lineupPublished ? '0' : '1' %>">
+          <button class="btn btn-sm <%= lineupPublished ? 'btn-outline-secondary' : 'btn-primary' %>" type="submit">
+            <%= lineupPublished ? 'Скрыть с публикации' : 'Опубликовать' %>
+          </button>
+        </form>
+        <a class="btn btn-outline-secondary btn-sm" href="/lineup">Открыть публичную страницу</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h2 class="h5 card-title">Добавить в лайнап</h2>
+      <form class="row g-2 align-items-end mb-3" method="post" action="/admin/lineup/add-song">
+        <div class="col-12 col-md-8">
+          <label class="form-label" for="lineup-song">Песня</label>
+          <select class="form-select form-select-sm" id="lineup-song" name="song_id" required>
+            <% lineupCandidates.forEach(x => { %>
+              <option value="<%= x.id %>"><%= x.title %><%= x.original_artist ? ' — ' + x.original_artist : '' %> (<%= x.likes %>)</option>
+            <% }) %>
+          </select>
+          <% if (lineupCandidates.length === 0) { %>
+            <div class="form-text">Все заявленные песни уже в лайнапе</div>
+          <% } %>
+        </div>
+        <div class="col-12 col-md-4">
+          <button class="btn btn-primary btn-sm" type="submit"<%= lineupCandidates.length === 0 ? ' disabled' : '' %>>Добавить песню</button>
+        </div>
+      </form>
+
+      <form class="row g-2 align-items-end mb-3" method="post" action="/admin/lineup/add-break">
+        <div class="col-12 col-md-8">
+          <label class="form-label" for="lineup-break">Перерыв</label>
+          <input class="form-control form-control-sm" type="text" id="lineup-break" name="label" placeholder="Перерыв 15 минут">
+        </div>
+        <div class="col-12 col-md-4">
+          <button class="btn btn-outline-primary btn-sm" type="submit">Добавить перерыв</button>
+        </div>
+      </form>
+
+      <div class="d-flex flex-wrap gap-2">
+        <form method="post" action="/admin/lineup/fill">
+          <button class="btn btn-outline-secondary btn-sm" type="submit">Собрать из всех заявленных</button>
+        </form>
+        <form method="post" action="/admin/lineup/clear">
+          <button class="btn btn-outline-secondary btn-sm" type="submit">Очистить лайнап</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="h4 mb-3">Порядок</h2>
+  <% if (lineupItems.length === 0) { %>
+    <p>Лайнап пуст. Добавь песни выше или собери его одной кнопкой.</p>
+  <% } else { %>
+    <div class="list-group mb-4">
+      <% lineupItems.forEach((item, index) => { %>
+        <div class="list-group-item d-flex flex-wrap align-items-center gap-2">
+          <% if (item.kind === 'break') { %>
+            <span class="badge text-bg-secondary">пауза</span>
+            <span class="flex-grow-1 song-line"><%= item.label %></span>
+          <% } else { %>
+            <span class="badge text-bg-primary"><%= item.number %></span>
+            <span class="flex-grow-1 song-line">
+              <% if (item.song != null) { %>
+                <%= item.song.title %>
+                <% if (item.song.original_artist) { %>
+                  <span class="text-body-secondary">— <%= item.song.original_artist %></span>
+                <% } %>
+                <% if (item.song.performerNames.length > 0) { %>
+                  <span class="small text-body-secondary d-block">играют: <%= item.song.performerNames.join(', ') %></span>
+                <% } %>
+              <% } else { %>
+                <span class="text-body-secondary">песня удалена или отменена</span>
+              <% } %>
+            </span>
+          <% } %>
+          <form method="post" action="/admin/lineup/<%= item.id %>/move">
+            <input type="hidden" name="direction" value="up">
+            <button class="btn btn-outline-secondary btn-sm" type="submit" aria-label="Выше"<%= index === 0 ? ' disabled' : '' %>><i class="bi bi-arrow-up"></i></button>
+          </form>
+          <form method="post" action="/admin/lineup/<%= item.id %>/move">
+            <input type="hidden" name="direction" value="down">
+            <button class="btn btn-outline-secondary btn-sm" type="submit" aria-label="Ниже"<%= index === lineupItems.length - 1 ? ' disabled' : '' %>><i class="bi bi-arrow-down"></i></button>
+          </form>
+          <form method="post" action="/admin/lineup/<%= item.id %>/delete">
+            <button class="btn btn-outline-secondary btn-sm" type="submit">Убрать</button>
+          </form>
+        </div>
+      <% }) %>
     </div>
   <% } %>
 <% } %>

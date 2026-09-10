@@ -11,7 +11,10 @@
 <% const voted = locals.votedSongs != null && votedSongs.has(song.id); %>
 <div class="d-flex flex-wrap align-items-center gap-2 mb-4">
   <% if (voted) { %>
-    <button class="btn btn-primary" type="button" disabled title="Ты уже голосовал за эту песню"><i class="bi bi-heart-fill"></i> Нравится</button>
+    <form method="post" action="/songs/<%= song.id %>/unlike">
+      <input type="hidden" name="back" value="<%= locals.currentPath == null ? '/songs' : locals.currentPath %>">
+      <button class="btn btn-primary" type="submit" title="Убрать свой голос"><i class="bi bi-heart-fill"></i> Нравится</button>
+    </form>
   <% } else { %>
     <form method="post" action="/songs/<%= song.id %>/like" data-like-song="<%= song.id %>">
       <input type="hidden" name="back" value="<%= locals.currentPath == null ? '/songs' : locals.currentPath %>">

@@ -17,7 +17,10 @@
     </div>
   </div>
   <% if (rowVoted) { %>
-    <button class="btn btn-primary btn-sm" type="button" disabled title="Ты уже голосовал за эту песню"><i class="bi bi-heart-fill"></i> <%= song.likes %></button>
+    <form method="post" action="/songs/<%= song.id %>/unlike">
+      <input type="hidden" name="back" value="<%= locals.currentPath == null ? '/songs' : locals.currentPath %>">
+      <button class="btn btn-primary btn-sm" type="submit" title="Убрать свой голос"><i class="bi bi-heart-fill"></i> <%= song.likes %></button>
+    </form>
   <% } else { %>
     <form method="post" action="/songs/<%= song.id %>/like" data-like-song="<%= song.id %>">
       <input type="hidden" name="back" value="<%= locals.currentPath == null ? '/songs' : locals.currentPath %>">

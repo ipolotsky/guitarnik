@@ -5,13 +5,13 @@ const path = require('path');
 const express = require('express');
 const session = require('express-session');
 const reference = require('./lib/reference');
-const backup = require('./lib/backup');
 const sync = require('./lib/sync');
 const device = require('./lib/device');
 const store = require('./lib/store');
 const database = require('./lib/db');
 const home = require('./routes/home');
 const songs = require('./routes/songs');
+const lineup = require('./routes/lineup');
 const add = require('./routes/add');
 const helpers = require('./routes/helpers');
 const admin = require('./routes/admin');
@@ -45,17 +45,24 @@ app.use(session({
   },
 }));
 
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
   res.locals.reference = reference;
   res.locals.isAdmin = !!req.session.isAdmin;
   res.locals.currentPath = req.originalUrl;
   req.deviceId = device.ensure(req, res);
-  res.locals.votedSongs = store.listVotes(req.deviceId);
+  try {
+    res.locals.votedSongs = await store.listVotes(req.deviceId);
+  } catch (error) {
+    res.locals.votedSongs = new Set();
+    next(error);
+    return;
+  }
   next();
 });
 
 app.use('/', home.router);
 app.use('/songs', songs.router);
+app.use('/lineup', lineup.router);
 app.use('/add', add.router);
 app.use('/helpers', helpers.router);
 app.use('/admin', admin.router);
@@ -74,13 +81,17 @@ app.use((error, req, res, next) => {
   });
 });
 
-database.getDatabase();
-
-app.listen(PORT, () => {
-  console.log(`Гитарник слушает порт ${PORT}`);
-  backup.start();
-  sync.start();
-});
+database.ensureSchema()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Гитарник слушает порт ${PORT}`);
+      sync.start();
+    });
+  })
+  .catch(error => {
+    console.error(`Не получилось подготовить базу: ${error.message}`);
+    process.exit(1);
+  });
 
 function sessionSecret() {
   const value = typeof process.env.SESSION_SECRET === 'string' ? process.env.SESSION_SECRET.trim() : '';

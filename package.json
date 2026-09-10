@@ -9,13 +9,16 @@
     "node": ">=18"
   },
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test --test-concurrency=1 test/helpers.test.js test/app.test.js",
+    "test:mutation": "node test/mutation.js"
   },
   "dependencies": {
     "dotenv": "^17.4.2",
     "ejs": "^6.0.1",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
-    "googleapis": "^178.1.1"
+    "googleapis": "^178.1.1",
+    "pg": "^8.23.0"
   }
 }

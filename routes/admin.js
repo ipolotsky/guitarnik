@@ -7,8 +7,9 @@ const data = require('../lib/data');
 const sheetsAdmin = require('../lib/sheetsAdmin');
 const backup = require('../lib/backup');
 const sync = require('../lib/sync');
+const lineup = require('../lib/lineup');
 
-const TABS = ['summary', 'participants', 'songs', 'likes'];
+const TABS = ['summary', 'lineup', 'participants', 'songs', 'likes'];
 const EXPORTED_STATUSES = [reference.STATUS_DECLARED, reference.STATUS_SETLIST];
 
 const router = express.Router();
@@ -45,10 +46,51 @@ router.get('/', async (req, res) => {
     participantMap: view.participantMap,
     songTitles: view.songTitles,
     summary: buildSummary(view.songs),
-    backupStatus: backup.getStatus(),
-    syncStatus: sync.getStatus(),
+    backupStatus: await backup.getStatus(),
+    syncStatus: await sync.getStatus(),
     notice: pickNotice(req.query.notice),
+    lineupItems: await lineupRows(view.songs),
+    lineupPublished: await lineup.isPublished(),
+    lineupCandidates: lineupCandidates(view.songs, await lineup.getItems()),
   });
+});
+
+router.post('/lineup/add-song', async (req, res) => {
+  await lineup.addSong(bodyField(req, 'song_id'));
+  res.redirect('/admin?tab=lineup');
+});
+
+router.post('/lineup/add-break', async (req, res) => {
+  await lineup.addBreak(bodyField(req, 'label'));
+  res.redirect('/admin?tab=lineup');
+});
+
+router.post('/lineup/fill', async (req, res) => {
+  const songs = helpers.playableSongs(helpers.activeSongs(helpers.enrichSongs(await data.getSongs(), [], [])));
+  await lineup.fillFromSongs(songs.map(x => x.id));
+  res.redirect(noticeUrl('lineup', 'filled'));
+});
+
+router.post('/lineup/clear', async (req, res) => {
+  await lineup.clear();
+  res.redirect('/admin?tab=lineup');
+});
+
+router.post('/lineup/publish', async (req, res) => {
+  const publish = bodyField(req, 'publish') === '1';
+  await lineup.setPublished(publish);
+  res.redirect(noticeUrl('lineup', publish ? 'published' : 'hidden'));
+});
+
+router.post('/lineup/:id/move', async (req, res) => {
+  const direction = bodyField(req, 'direction') === 'up' ? 'up' : 'down';
+  await lineup.move(req.params.id, direction);
+  res.redirect('/admin?tab=lineup');
+});
+
+router.post('/lineup/:id/delete', async (req, res) => {
+  await lineup.remove(req.params.id);
+  res.redirect('/admin?tab=lineup');
 });
 
 router.post('/backup', (req, res) => {
@@ -227,6 +269,28 @@ async function loadData() {
   };
 }
 
+async function lineupRows(songs) {
+  const byId = {};
+  songs.forEach(x => {
+    byId[x.id] = x;
+  });
+  const items = await lineup.getItems();
+  let number = 0;
+  return items.map(item => {
+    if (item.kind === lineup.BREAK) {
+      return { id: item.id, kind: item.kind, label: item.label, number: 0, song: null };
+    }
+    number += 1;
+    return { id: item.id, kind: item.kind, label: '', number, song: byId[item.songId] == null ? null : byId[item.songId] };
+  });
+}
+
+function lineupCandidates(songs, items) {
+  const used = items.filter(x => x.kind === lineup.SONG).map(x => x.songId);
+  return helpers.sortSongs(helpers.playableSongs(helpers.activeSongs(songs)), 'likes')
+    .filter(x => used.indexOf(x.id) === -1);
+}
+
 function pickNotice(value) {
   const text = typeof value === 'string' ? value : '';
   if (text === 'backup') {
@@ -237,6 +301,15 @@ function pickNotice(value) {
   }
   if (text === 'pull') {
     return { kind: 'success', text: 'Данные загружены из таблицы' };
+  }
+  if (text === 'published') {
+    return { kind: 'success', text: 'Лайнап опубликован, его видно всем' };
+  }
+  if (text === 'hidden') {
+    return { kind: 'success', text: 'Лайнап скрыт, посетители видят сообщение об ожидании' };
+  }
+  if (text === 'filled') {
+    return { kind: 'success', text: 'Лайнап собран из заявленных песен, порядок по лайкам' };
   }
   if (text.startsWith('error:')) {
     return { kind: 'danger', text: text.slice('error:'.length).slice(0, 300) };

@@ -3,6 +3,11 @@ name: guitarnik
 networks:
   web:
     external: true
+  internal:
+    driver: bridge
+
+volumes:
+  postgres_data:
 
 services:
   app:
@@ -11,16 +16,20 @@ services:
     env_file: [.env]
     environment:
       PORT: "3000"
+      DATABASE_URL: postgres://guitarnik:${POSTGRES_PASSWORD}@postgres:5432/guitarnik
     volumes:
       - ./data:/app/data
-    networks: [web]
-    mem_limit: 256m
+    networks: [web, internal]
+    mem_limit: 320m
+    depends_on:
+      postgres:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/admin/login"]
       interval: 30s
       timeout: 3s
       retries: 3
-      start_period: 10s
+      start_period: 15s
     labels:
       - traefik.enable=true
       - traefik.docker.network=web
@@ -28,3 +37,33 @@ services:
       - traefik.http.routers.guitarnik.entrypoints=websecure
       - traefik.http.routers.guitarnik.tls.certresolver=letsencrypt
       - traefik.http.services.guitarnik.loadbalancer.server.port=3000
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: guitarnik
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: guitarnik
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks: [internal]
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U guitarnik -d guitarnik"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  databasus:
+    image: databasus/databasus:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:4005:4005"
+    volumes:
+      - ./databasus-data:/databasus-data
+    networks: [internal]
+    mem_limit: 512m
+    depends_on:
+      postgres:
+        condition: service_healthy
