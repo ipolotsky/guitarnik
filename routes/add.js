@@ -31,7 +31,7 @@ router.post('/perform', async (req, res) => {
       performers: [who.id].concat(partnerIds.filter(x => x !== who.id)),
       who_plays_what: helpers.asText(req.body.who_plays_what),
       need_musicians: helpers.asText(req.body.need_musicians),
-      gear: helpers.asList(req.body.gear),
+      gear: helpers.asKnownList(req.body.gear, reference.GEAR),
       own_gear: helpers.asText(req.body.own_gear),
       lyrics: helpers.asText(req.body.lyrics),
       lyrics_url: helpers.asText(req.body.lyrics_url),

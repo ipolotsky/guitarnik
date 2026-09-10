@@ -74,7 +74,7 @@
 
   <% if (song.lyrics_url) { %>
     <dt class="col-sm-4">Ссылка на текст</dt>
-    <dd class="col-sm-8">
+    <dd class="col-sm-8 text-break">
       <% if (song.lyricsUrlSafe != null) { %>
         <a href="<%= song.lyricsUrlSafe %>" rel="noopener noreferrer" target="_blank"><%= song.lyricsUrlSafe %></a>
       <% } else { %>

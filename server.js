@@ -9,6 +9,7 @@ const backup = require('./lib/backup');
 const sync = require('./lib/sync');
 const device = require('./lib/device');
 const store = require('./lib/store');
+const database = require('./lib/db');
 const home = require('./routes/home');
 const songs = require('./routes/songs');
 const add = require('./routes/add');
@@ -25,6 +26,12 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('trust proxy', 1);
 
 app.use(express.urlencoded({ extended: true }));
+app.use((req, res, next) => {
+  if (req.body == null) {
+    req.body = {};
+  }
+  next();
+});
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
   secret: sessionSecret(),
@@ -66,6 +73,8 @@ app.use((error, req, res, next) => {
     isSheets,
   });
 });
+
+database.getDatabase();
 
 app.listen(PORT, () => {
   console.log(`Гитарник слушает порт ${PORT}`);

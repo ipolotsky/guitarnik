@@ -18,8 +18,9 @@
 <form class="row g-2 mb-3" method="get" action="/songs">
   <input type="hidden" name="tab" value="<%= tab %>">
   <input type="hidden" name="sort" value="<%= sort %>">
+  <input type="hidden" name="view" value="<%= view %>">
   <div class="col-12 col-sm">
-    <input class="form-control" type="search" name="q" value="<%= q %>" placeholder="Название или автор оригинала" aria-label="Поиск по песням">
+    <input class="form-control" type="search" name="q" value="<%= query %>" placeholder="Название или автор оригинала" aria-label="Поиск по песням">
   </div>
   <div class="col-12 col-sm-auto d-grid">
     <button class="btn btn-outline-primary" type="submit">Найти</button>
@@ -30,12 +31,16 @@
   <span class="text-body-secondary">Сортировка:</span>
   <a class="btn btn-sm <%= sort === 'likes' ? 'btn-primary' : 'btn-outline-primary' %>" href="<%= links.sortLikes %>">по лайкам</a>
   <a class="btn btn-sm <%= sort === 'new' ? 'btn-primary' : 'btn-outline-primary' %>" href="<%= links.sortNew %>">сначала новые</a>
+  <span class="ms-sm-auto d-flex gap-2">
+    <a class="btn btn-sm <%= view === 'list' ? 'btn-primary' : 'btn-outline-primary' %>" href="<%= links.viewList %>" title="Списком"><i class="bi bi-list-ul"></i></a>
+    <a class="btn btn-sm <%= view === 'cards' ? 'btn-primary' : 'btn-outline-primary' %>" href="<%= links.viewCards %>" title="Карточками"><i class="bi bi-grid"></i></a>
+  </span>
 </div>
 
 <% if (songs.length === 0) { %>
   <div class="alert alert-secondary">
-    <% if (q !== '') { %>
-      По запросу «<%= q %>» ничего не нашлось.
+    <% if (query !== '') { %>
+      По запросу «<%= query %>» ничего не нашлось.
     <% } else if (tab === 'wish') { %>
       Хотелок пока нет.
     <% } else { %>
@@ -47,10 +52,16 @@
       <a href="/add/perform">Добавить песню</a>
     <% } %>
   </div>
-<% } else { %>
+<% } else if (view === 'cards') { %>
   <div class="row row-cols-1 row-cols-md-2 g-3">
     <% songs.forEach(x => { %>
       <div class="col"><%- include('partials/song-card', { song: x, mode: tab === 'wish' ? 'wish' : 'play' }) %></div>
+    <% }) %>
+  </div>
+<% } else { %>
+  <div class="list-group">
+    <% songs.forEach(x => { %>
+      <%- include('partials/song-row', { song: x, mode: tab === 'wish' ? 'wish' : 'play' }) %>
     <% }) %>
   </div>
 <% } %>

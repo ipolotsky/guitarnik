@@ -52,8 +52,12 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/backup', (req, res) => {
-  backup.run();
-  res.redirect('/admin?tab=summary&notice=backup');
+  try {
+    backup.run();
+    res.redirect('/admin?tab=summary&notice=backup');
+  } catch (error) {
+    res.redirect(noticeUrl('summary', `error:${error.message}`));
+  }
 });
 
 router.post('/sync/push', async (req, res) => {
@@ -61,7 +65,7 @@ router.post('/sync/push', async (req, res) => {
     await sync.pushAll();
     res.redirect('/admin?tab=summary&notice=push');
   } catch (error) {
-    res.redirect(`/admin?tab=summary&notice=${encodeURIComponent(`error:${error.message}`)}`);
+    res.redirect(noticeUrl('summary', `error:${error.message}`));
   }
 });
 
@@ -70,7 +74,7 @@ router.post('/sync/pull', async (req, res) => {
     await sync.pullAll();
     res.redirect('/admin?tab=summary&notice=pull');
   } catch (error) {
-    res.redirect(`/admin?tab=summary&notice=${encodeURIComponent(`error:${error.message}`)}`);
+    res.redirect(noticeUrl('summary', `error:${error.message}`));
   }
 });
 
@@ -81,30 +85,45 @@ router.get('/export/data.json', async (req, res) => {
 
 router.post('/songs/:id/status', async (req, res) => {
   const status = bodyField(req, 'status');
-  if (reference.STATUSES.indexOf(status) >= 0) {
-    await data.updateSong(req.params.id, { status });
+  if (reference.STATUSES.indexOf(status) < 0) {
+    res.redirect(noticeUrl('songs', 'error:Такого статуса нет в справочнике'));
+    return;
   }
-  res.redirect('/admin?tab=songs');
+  res.redirect(await changeStatus(req.params.id, status));
 });
 
 router.post('/songs/:id/delete', async (req, res) => {
-  await data.updateSong(req.params.id, { status: reference.STATUS_CANCELLED });
-  res.redirect('/admin?tab=songs');
+  res.redirect(await changeStatus(req.params.id, reference.STATUS_CANCELLED));
 });
+
+async function changeStatus(id, status) {
+  try {
+    await data.updateSong(id, { status });
+    return '/admin?tab=songs';
+  } catch (error) {
+    return noticeUrl('songs', `error:${error.message}`);
+  }
+}
+
+function noticeUrl(tab, notice) {
+  return `/admin?tab=${tab}&notice=${encodeURIComponent(notice)}`;
+}
 
 router.get('/settings', (req, res) => {
   res.render('admin/settings', settingsLocals(null, null, req.query.saved === '1'));
 });
 
 router.post('/settings', (req, res) => {
-  config.saveConfig({
-    spreadsheetId: bodyField(req, 'spreadsheetId'),
-    sheets: {
-      participants: bodyField(req, 'participants'),
-      songs: bodyField(req, 'songs'),
-      likes: bodyField(req, 'likes'),
-    },
+  const patch = { sheets: {} };
+  if (hasField(req, 'spreadsheetId')) {
+    patch.spreadsheetId = bodyField(req, 'spreadsheetId');
+  }
+  ['participants', 'songs', 'likes'].forEach(x => {
+    if (hasField(req, x)) {
+      patch.sheets[x] = bodyField(req, x);
+    }
   });
+  config.saveConfig(patch);
   res.redirect('/admin/settings?saved=1');
 });
 
@@ -180,6 +199,10 @@ function sha256(value) {
   return crypto.createHash('sha256').update(value, 'utf8').digest();
 }
 
+function hasField(req, name) {
+  return req.body != null && Object.prototype.hasOwnProperty.call(req.body, name);
+}
+
 function bodyField(req, name) {
   if (req.body == null || typeof req.body[name] !== 'string') {
     return '';
@@ -228,12 +251,13 @@ function pickTab(value) {
 
 function buildSummary(songs) {
   const active = helpers.activeSongs(songs);
+  const playable = helpers.playableSongs(active);
   return {
-    total: active.length,
-    prompter: active.filter(x => x.needPrompter).length,
-    projector: active.filter(x => x.showOnProjector).length,
-    gear: countGear(active),
-    ownGear: active
+    total: playable.length,
+    prompter: playable.filter(x => x.needPrompter).length,
+    projector: playable.filter(x => x.showOnProjector).length,
+    gear: countGear(playable),
+    ownGear: playable
       .filter(x => x.own_gear.trim() !== '')
       .map(x => ({ title: x.title, who: performersLine(x), gear: x.own_gear })),
     openWishes: helpers.sortSongs(helpers.openWishes(active), 'likes'),

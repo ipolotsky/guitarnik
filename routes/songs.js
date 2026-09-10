@@ -8,6 +8,8 @@ const TABS = ['play', 'wish'];
 
 const SORTS = ['likes', 'new'];
 
+const VIEWS = ['list', 'cards'];
+
 const LIKE_NAME_LIMIT = 80;
 
 const router = express.Router();
@@ -15,7 +17,8 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   const tab = TABS.indexOf(req.query.tab) === -1 ? 'play' : req.query.tab;
   const sort = SORTS.indexOf(req.query.sort) === -1 ? 'likes' : req.query.sort;
-  const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+  const query = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+  const view = VIEWS.indexOf(req.query.view) === -1 ? 'list' : req.query.view;
   const context = await loadContext();
   const list = tab === 'wish' ? helpers.openWishes(context.songs) : helpers.playableSongs(context.songs);
   res.render('songs', {
@@ -23,13 +26,16 @@ router.get('/', async (req, res) => {
     active: 'songs',
     tab: tab,
     sort: sort,
-    q: q,
-    songs: helpers.sortSongs(helpers.filterSongs(list, q), sort),
+    query: query,
+    view: view,
+    songs: helpers.sortSongs(helpers.filterSongs(list, query), sort),
     links: {
-      tabPlay: songsUrl('play', sort, q),
-      tabWish: songsUrl('wish', sort, q),
-      sortLikes: songsUrl(tab, 'likes', q),
-      sortNew: songsUrl(tab, 'new', q),
+      tabPlay: songsUrl('play', sort, query, view),
+      tabWish: songsUrl('wish', sort, query, view),
+      sortLikes: songsUrl(tab, 'likes', query, view),
+      sortNew: songsUrl(tab, 'new', query, view),
+      viewList: songsUrl(tab, sort, query, 'list'),
+      viewCards: songsUrl(tab, sort, query, 'cards'),
     },
   });
 });
@@ -95,7 +101,7 @@ router.post('/:id/take', async (req, res) => {
       who_plays_what: helpers.asText(req.body.who_plays_what),
       need_prompter: !!req.body.need_prompter,
       show_on_projector: !!req.body.show_on_projector,
-      gear: helpers.asList(req.body.gear),
+      gear: helpers.asKnownList(req.body.gear, reference.GEAR),
       own_gear: helpers.asText(req.body.own_gear),
     });
     res.render('done', {
@@ -138,7 +144,7 @@ const renderTake = (res, song, participants, values, submitted, error) => {
   });
 };
 
-const songsUrl = (tab, sort, q) => {
+const songsUrl = (tab, sort, query, view) => {
   const params = new URLSearchParams();
   if (tab !== 'play') {
     params.set('tab', tab);
@@ -146,11 +152,14 @@ const songsUrl = (tab, sort, q) => {
   if (sort !== 'likes') {
     params.set('sort', sort);
   }
-  if (q !== '') {
-    params.set('q', q);
+  if (query !== '') {
+    params.set('q', query);
   }
-  const query = params.toString();
-  return query === '' ? '/songs' : '/songs?' + query;
+  if (view !== 'list') {
+    params.set('view', view);
+  }
+  const search = params.toString();
+  return search === '' ? '/songs' : '/songs?' + search;
 };
 
 module.exports = { router };

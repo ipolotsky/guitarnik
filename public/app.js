@@ -29,7 +29,11 @@ const setupPicker = () => {
       const chip = document.createElement('button');
       chip.type = 'button';
       chip.className = 'btn btn-primary btn-sm';
-      chip.textContent = `${box.getAttribute('data-name')} ×`;
+      chip.textContent = box.getAttribute('data-name');
+      chip.title = 'Убрать из состава';
+      const icon = document.createElement('i');
+      icon.className = 'bi bi-x-lg ms-1';
+      chip.appendChild(icon);
       chip.addEventListener('click', () => {
         box.checked = false;
         renderChips();
@@ -112,11 +116,12 @@ const rememberParticipant = select => {
   if (option == null) {
     return;
   }
+  const stored = option.getAttribute('data-name');
   const label = option.textContent.trim();
   const separator = label.indexOf(NAME_SEPARATOR);
   writeStored(PARTICIPANT_KEY, {
     id: select.value,
-    name: separator === -1 ? label : label.slice(0, separator),
+    name: stored != null && stored !== '' ? stored : (separator === -1 ? label : label.slice(0, separator)),
   });
 };
 

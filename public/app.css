@@ -27,10 +27,12 @@ h1, .h1 { font-size: 2.5rem; }
 }
 
 .card { --bs-card-bg: #1e1816; box-shadow: none; }
+.btn-outline-secondary { --bs-btn-color: #d9c8bd; --bs-btn-border-color: #6b5a51; --bs-btn-hover-bg: #3d322c; --bs-btn-hover-color: #fff3e8; --bs-btn-hover-border-color: #6b5a51; }
 .nav-tabs { --bs-nav-tabs-link-active-color: #ff8c5a; --bs-nav-tabs-link-active-bg: #1e1816; }
 .form-check-input:checked { background-color: #ff6b3d; border-color: #ff6b3d; }
 .form-control:focus, .form-select:focus { border-color: #ff8c5a; box-shadow: 0 0 0 0.25rem rgba(255, 107, 61, 0.25); }
 .picker-list { max-height: 16rem; overflow-y: auto; }
+.song-line { min-width: 12rem; }
 pre.lyrics { white-space: pre-wrap; font-family: inherit; }
 
 .hero { max-width: 44rem; }

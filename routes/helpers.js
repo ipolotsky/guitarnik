@@ -37,7 +37,7 @@ router.post('/join', async (req, res) => {
   const participants = await data.getParticipants();
   try {
     const participantId = helpers.asText(req.body.participant_id);
-    const helpInstruments = helpers.asList(req.body.help_instruments);
+    const helpInstruments = helpers.asKnownList(req.body.help_instruments, reference.INSTRUMENTS);
     const about = helpers.asText(req.body.about);
     const telegram = helpers.asText(req.body.telegram);
     let participant = null;
@@ -46,7 +46,7 @@ router.post('/join', async (req, res) => {
       if (name === '') {
         throw new helpers.FormError('Напиши, как тебя зовут');
       }
-      const instruments = helpers.asList(req.body.new_instruments);
+      const instruments = helpers.asKnownList(req.body.new_instruments, reference.INSTRUMENTS);
       participant = await data.addParticipant({
         name: name,
         telegram: telegram === '' ? helpers.asText(req.body.new_telegram) : telegram,
@@ -89,11 +89,18 @@ router.post('/join', async (req, res) => {
 
 const buildCard = participant => {
   const help = helpers.splitList(participant.help_instruments);
+  const own = helpers.splitList(participant.instruments);
+  const all = help.slice();
+  own.forEach(x => {
+    if (all.indexOf(x) === -1) {
+      all.push(x);
+    }
+  });
   return {
     name: helpers.asText(participant.name),
     about: helpers.asText(participant.about),
     canHelp: helpers.parseBool(participant.can_help),
-    instruments: help.length === 0 ? helpers.splitList(participant.instruments) : help,
+    instruments: all,
     telegram: helpers.telegramHandle(participant.telegram),
     telegramText: helpers.asText(participant.telegram),
   };

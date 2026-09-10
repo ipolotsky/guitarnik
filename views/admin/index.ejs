@@ -29,11 +29,11 @@
   </li>
 </ul>
 
-<% if (tab === 'summary') { %>
-  <% if (notice != null) { %>
-    <div class="alert alert-<%= notice.kind %>"><%= notice.text %></div>
-  <% } %>
+<% if (notice != null) { %>
+  <div class="alert alert-<%= notice.kind %>"><%= notice.text %></div>
+<% } %>
 
+<% if (tab === 'summary') { %>
   <div class="card mb-4">
     <div class="card-body">
       <h2 class="h5 card-title">Хранилище</h2>
@@ -82,7 +82,7 @@
     <div class="col-6 col-lg-3">
       <div class="card h-100"><div class="card-body">
         <div class="fs-2"><%= summary.total %></div>
-        <div>активных песен</div>
+        <div>песен с исполнителем</div>
       </div></div>
     </div>
     <div class="col-6 col-lg-3">

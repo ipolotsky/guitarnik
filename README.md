@@ -35,7 +35,9 @@ npm install
 npm start
 ```
 
-Переменные в `.env`: `PORT`, `ADMIN_PASSWORD`, `SESSION_SECRET`, `SPREADSHEET_ID`, `GOOGLE_SERVICE_ACCOUNT_JSON`. Без `ADMIN_PASSWORD` вход в админку невозможен. Без `SESSION_SECRET` сервер возьмет случайный секрет и напишет об этом в лог, сессии админа сбросятся при перезапуске.
+Переменные в `.env`: `PORT`, `ADMIN_PASSWORD`, `SESSION_SECRET`, `SPREADSHEET_ID`, `GOOGLE_SERVICE_ACCOUNT_JSON`. Еще две необязательные: `DOMAIN` нужен только docker-compose для маршрута Traefik, `DATA_DIR` меняет каталог с базой и бекапами.
+
+Без `ADMIN_PASSWORD` вход в админку невозможен. Без `SESSION_SECRET` сервер возьмет случайный секрет и напишет об этом в лог. Сессии админа хранятся в памяти процесса, поэтому после каждого перезапуска надо войти заново, независимо от секрета.
 
 Сайт поднимается на `http://localhost:3000` или на порту из `PORT`.
 
@@ -57,13 +59,20 @@ npm start
 
 Каждую ночь после четырех утра сервер делает копию базы в `data/backups/guitarnik-ГГГГ-ММ-ДД.sqlite` и держит последние тридцать файлов. В сводке админки видно дату последнего бекапа и есть кнопка «Сделать бекап сейчас». Выгрузка `/admin/export/data.json` отдает все три таблицы одним файлом.
 
-Восстановление: остановить контейнер, положить нужный файл из `data/backups` на место `data/guitarnik.sqlite`, запустить обратно.
+Восстановление: остановить контейнер, положить нужный файл из `data/backups` на место `data/guitarnik.sqlite` и удалить рядом лежащие `guitarnik.sqlite-wal` и `guitarnik.sqlite-shm`, иначе поверх копии накатится старый журнал. Затем запустить обратно.
+
+```
+docker compose stop app
+cp data/backups/guitarnik-2026-09-10.sqlite data/guitarnik.sqlite
+rm -f data/guitarnik.sqlite-wal data/guitarnik.sqlite-shm
+docker compose start app
+```
 
 Нужен Node 22.13 или новее: база работает на встроенном модуле `node:sqlite`.
 
 ## Деплой на сервер с docker
 
-Рядом лежат `Dockerfile` и `docker-compose.yml` под сервер с общим Traefik: сеть `web`, роутер на домен из переменной `DOMAIN`, сертификат от резолвера `letsencrypt`. Папка `data` примонтирована с хоста, поэтому `config.json` и `backup.sqlite` переживают пересборку.
+Рядом лежат `Dockerfile` и `docker-compose.yml` под сервер с общим Traefik: сеть `web`, роутер на домен из переменной `DOMAIN`, сертификат от резолвера `letsencrypt`. Папка `data` примонтирована с хоста, поэтому база, настройки и бекапы переживают пересборку.
 
 ```
 cd ~/guitarnik

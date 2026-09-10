@@ -1,0 +1,31 @@
+<% const rowVoted = locals.votedSongs != null && votedSongs.has(song.id); -%>
+<div class="list-group-item d-flex flex-wrap align-items-center gap-2 py-3">
+  <div class="flex-grow-1 song-line">
+    <a class="link-body-emphasis text-decoration-none fw-semibold" href="/songs/<%= song.id %>"><%= song.title %></a>
+    <% if (song.original_artist) { %>
+      <span class="text-body-secondary"> — <%= song.original_artist %></span>
+    <% } %>
+    <div class="small text-body-secondary">
+      <% if (mode === 'wish') { %>
+        заказал(а) <%= song.addedByName ? song.addedByName : 'кто-то из наших' %>
+      <% } else if (song.performerNames.length > 0) { %>
+        играют: <%= song.performerNames.join(', ') %>
+      <% } %>
+      <% if (mode !== 'wish' && song.status && song.status !== reference.STATUS_DECLARED) { %>
+        <span class="badge text-bg-secondary ms-1"><%= song.status %></span>
+      <% } %>
+    </div>
+  </div>
+  <% if (rowVoted) { %>
+    <button class="btn btn-primary btn-sm" type="button" disabled title="Ты уже голосовал за эту песню"><i class="bi bi-heart-fill"></i> <%= song.likes %></button>
+  <% } else { %>
+    <form method="post" action="/songs/<%= song.id %>/like" data-like-song="<%= song.id %>">
+      <input type="hidden" name="back" value="<%= locals.currentPath == null ? '/songs' : locals.currentPath %>">
+      <input type="hidden" name="name" value="">
+      <button class="btn btn-outline-primary btn-sm" type="submit"><i class="bi bi-heart"></i> <%= song.likes %></button>
+    </form>
+  <% } %>
+  <% if (mode === 'wish') { %>
+    <a class="btn btn-primary btn-sm" href="/songs/<%= song.id %>/take">Беру!</a>
+  <% } %>
+</div>

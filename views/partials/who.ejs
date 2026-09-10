@@ -5,7 +5,7 @@
   <select class="form-select form-select-lg" id="participant_id" name="participant_id" data-who required>
     <option value="">Выбери себя из списка</option>
     <% participants.forEach(x => { %>
-      <option value="<%= x.id %>"<%= whoValues.participant_id === x.id ? ' selected' : '' %>><%= x.instruments ? x.name + ' - ' + x.instruments : x.name %></option>
+      <option value="<%= x.id %>" data-name="<%= x.name %>"<%= whoValues.participant_id === x.id ? ' selected' : '' %>><%= x.instruments ? x.name + ' - ' + x.instruments : x.name %></option>
     <% }) %>
     <option value="<%= reference.NEW_PARTICIPANT_OPTION %>"<%= whoValues.participant_id === reference.NEW_PARTICIPANT_OPTION ? ' selected' : '' %>>Меня тут еще нет</option>
   </select>
