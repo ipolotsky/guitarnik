@@ -1,0 +1,17 @@
+<%- include('partials/header', { title: title, active: locals.active }) %>
+
+<h1 class="mb-3"><%= title %></h1>
+
+<% if (locals.participant != null && locals.participant.id) { %>
+  <div data-remember-id="<%= participant.id %>" data-remember-name="<%= participant.name %>" hidden></div>
+<% } %>
+
+<p class="fs-5 mb-4"><%= text %></p>
+
+<div class="d-grid gap-2 d-sm-flex">
+  <% links.forEach(x => { %>
+    <a class="btn btn-lg <%= x.primary ? 'btn-primary' : 'btn-outline-primary' %>" href="<%= x.href %>"><%= x.label %></a>
+  <% }) %>
+</div>
+
+<%- include('partials/footer') %>

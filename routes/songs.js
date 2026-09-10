@@ -1,0 +1,150 @@
+const express = require('express');
+const data = require('../lib/data');
+const helpers = require('../lib/helpers');
+const reference = require('../lib/reference');
+
+const TABS = ['play', 'wish'];
+
+const SORTS = ['likes', 'new'];
+
+const LIKE_NAME_LIMIT = 80;
+
+const router = express.Router();
+
+router.get('/', async (req, res) => {
+  const tab = TABS.indexOf(req.query.tab) === -1 ? 'play' : req.query.tab;
+  const sort = SORTS.indexOf(req.query.sort) === -1 ? 'likes' : req.query.sort;
+  const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+  const context = await loadContext();
+  const list = tab === 'wish' ? helpers.openWishes(context.songs) : helpers.playableSongs(context.songs);
+  res.render('songs', {
+    title: 'Песни',
+    active: 'songs',
+    tab: tab,
+    sort: sort,
+    q: q,
+    songs: helpers.sortSongs(helpers.filterSongs(list, q), sort),
+    links: {
+      tabPlay: songsUrl('play', sort, q),
+      tabWish: songsUrl('wish', sort, q),
+      sortLikes: songsUrl(tab, 'likes', q),
+      sortNew: songsUrl(tab, 'new', q),
+    },
+  });
+});
+
+router.get('/:id', async (req, res) => {
+  const context = await loadContext();
+  const song = context.songs.find(x => x.id === req.params.id);
+  if (song == null) {
+    res.status(404).render('not-found');
+    return;
+  }
+  res.render('song', { title: song.title, active: 'songs', song: song });
+});
+
+router.post('/:id/like', async (req, res) => {
+  const context = await loadContext();
+  const song = context.songs.find(x => x.id === req.params.id);
+  if (song == null) {
+    res.status(404).render('not-found');
+    return;
+  }
+  const name = helpers.asText(req.body.name).slice(0, LIKE_NAME_LIMIT);
+  await data.addLike(song.id, name);
+  res.redirect(helpers.safeBackPath(req.body.back, '/songs'));
+});
+
+router.get('/:id/take', async (req, res) => {
+  const context = await loadContext();
+  const song = context.songs.find(x => x.id === req.params.id);
+  if (song == null) {
+    res.status(404).render('not-found');
+    return;
+  }
+  if (!song.isOpenWish) {
+    res.redirect('/songs/' + encodeURIComponent(song.id));
+    return;
+  }
+  renderTake(res, song, context.participants, {}, false, null);
+});
+
+router.post('/:id/take', async (req, res) => {
+  const context = await loadContext();
+  const song = context.songs.find(x => x.id === req.params.id);
+  if (song == null) {
+    res.status(404).render('not-found');
+    return;
+  }
+  if (!song.isOpenWish) {
+    res.redirect('/songs/' + encodeURIComponent(song.id));
+    return;
+  }
+  try {
+    const who = await helpers.resolveWho(req.body, context.participants);
+    const partnerIds = await helpers.resolvePartners(req.body, context.participants);
+    await data.updateSong(song.id, {
+      performers: [who.id].concat(partnerIds.filter(x => x !== who.id)),
+      status: reference.STATUS_DECLARED,
+      who_plays_what: helpers.asText(req.body.who_plays_what),
+      need_prompter: !!req.body.need_prompter,
+      show_on_projector: !!req.body.show_on_projector,
+      gear: helpers.asList(req.body.gear),
+      own_gear: helpers.asText(req.body.own_gear),
+    });
+    res.render('done', {
+      title: 'Песня твоя',
+      active: 'songs',
+      participant: { id: who.id, name: who.name },
+      text: 'Мы записали тебя исполнителем. Дальше можно добавить свои песни или посмотреть, что уже собрано.',
+      links: [
+        { href: '/songs/' + encodeURIComponent(song.id), label: 'Открыть песню', primary: true },
+        { href: '/songs', label: 'Посмотреть все песни', primary: false },
+      ],
+    });
+  } catch (error) {
+    if (error.name !== 'FormError') {
+      throw error;
+    }
+    renderTake(res, song, context.participants, req.body, true, error.message);
+  }
+});
+
+const loadContext = async () => {
+  const loaded = await Promise.all([data.getParticipants(), data.getSongs(), data.getLikes()]);
+  return {
+    participants: loaded[0],
+    songs: helpers.activeSongs(helpers.enrichSongs(loaded[1], loaded[0], loaded[2])),
+  };
+};
+
+const renderTake = (res, song, participants, values, submitted, error) => {
+  res.render('take', {
+    title: 'Беру песню',
+    active: 'songs',
+    song: song,
+    participants: participants,
+    readyPartners: participants.filter(x => helpers.parseBool(x.can_help)),
+    otherPartners: participants.filter(x => !helpers.parseBool(x.can_help)),
+    values: values,
+    submitted: submitted,
+    error: error,
+  });
+};
+
+const songsUrl = (tab, sort, q) => {
+  const params = new URLSearchParams();
+  if (tab !== 'play') {
+    params.set('tab', tab);
+  }
+  if (sort !== 'likes') {
+    params.set('sort', sort);
+  }
+  if (q !== '') {
+    params.set('q', q);
+  }
+  const query = params.toString();
+  return query === '' ? '/songs' : '/songs?' + query;
+};
+
+module.exports = { router };

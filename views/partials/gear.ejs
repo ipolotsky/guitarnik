@@ -1,0 +1,16 @@
+<% const gearValues = locals.values == null ? {} : locals.values; -%>
+<% const selectedGear = gearValues.gear == null ? [] : [].concat(gearValues.gear); -%>
+<div class="mb-3">
+  <span class="form-label fw-semibold">Что нужно из нашего оборудования</span>
+  <div class="form-text mb-2">всё это уже есть на площадке, отметь, чем воспользуешься</div>
+  <div class="d-flex flex-wrap gap-2">
+    <% reference.GEAR.forEach((x, i) => { %>
+      <input class="btn-check" type="checkbox" name="gear" value="<%= x %>" id="gear-<%= i %>" autocomplete="off"<%= selectedGear.indexOf(x) === -1 ? '' : ' checked' %>>
+      <label class="btn btn-outline-primary btn-sm" for="gear-<%= i %>"><%= x %></label>
+    <% }) %>
+  </div>
+</div>
+<div class="mb-3">
+  <label class="form-label" for="own_gear">Приду со своим</label>
+  <input class="form-control" type="text" id="own_gear" name="own_gear" value="<%= gearValues.own_gear == null ? '' : gearValues.own_gear %>">
+</div>

@@ -1,0 +1,13 @@
+node_modules
+.env
+.env.*
+!.env.example
+data/config.json
+data/guitarnik.sqlite
+data/guitarnik.sqlite-wal
+data/guitarnik.sqlite-shm
+data/backups
+.git
+.DS_Store
+Dockerfile
+docker-compose.yml

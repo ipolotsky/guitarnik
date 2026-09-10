@@ -1,0 +1,42 @@
+<%- include('partials/header', { title: 'Готов подыграть', active: 'helpers' }) %>
+<% const helpInstruments = values.help_instruments == null ? [] : [].concat(values.help_instruments); %>
+
+<h1 class="mb-3">Готов подыграть</h1>
+
+<p class="mb-4">Отметься, если можешь подыграть чужую песню. Тебя увидят те, кому не хватает музыканта.</p>
+
+<% if (error != null) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<form method="post" action="/helpers/join">
+  <%- include('partials/who') %>
+
+  <div class="mb-3">
+    <span class="form-label fw-semibold">На чем готов подыграть</span>
+    <div class="d-flex flex-wrap gap-2">
+      <% reference.INSTRUMENTS.forEach((x, i) => { %>
+        <input class="btn-check" type="checkbox" name="help_instruments" value="<%= x %>" id="help-instrument-<%= i %>" autocomplete="off"<%= helpInstruments.indexOf(x) === -1 ? '' : ' checked' %>>
+        <label class="btn btn-outline-primary btn-sm" for="help-instrument-<%= i %>"><%= x %></label>
+      <% }) %>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label" for="about">О себе</label>
+    <textarea class="form-control" id="about" name="about" rows="3"><%= values.about == null ? '' : values.about %></textarea>
+    <div class="form-text">Что играешь, что любишь, с чем звать</div>
+  </div>
+
+  <div class="mb-4">
+    <label class="form-label" for="telegram">Телеграм</label>
+    <input class="form-control" type="text" id="telegram" name="telegram" value="<%= values.telegram == null ? '' : values.telegram %>">
+    <div class="form-text">Чтобы с тобой могли связаться</div>
+  </div>
+
+  <div class="d-grid gap-2 d-sm-flex">
+    <button class="btn btn-primary btn-lg" type="submit">Готов подыграть</button>
+  </div>
+</form>
+
+<%- include('partials/footer') %>

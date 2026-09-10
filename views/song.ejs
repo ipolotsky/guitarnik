@@ -1,0 +1,89 @@
+<%- include('partials/header', { title: song.title, active: 'songs' }) %>
+
+<p class="mb-2"><a href="/songs">Все песни</a></p>
+
+<h1 class="mb-1"><%= song.title %></h1>
+
+<% if (song.original_artist) { %>
+  <p class="fs-5 text-body-secondary mb-3"><%= song.original_artist %></p>
+<% } %>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+  <form method="post" action="/songs/<%= song.id %>/like" data-like-song="<%= song.id %>">
+    <input type="hidden" name="back" value="<%= locals.currentPath == null ? '/songs' : locals.currentPath %>">
+    <input type="hidden" name="name" value="">
+    <button class="btn btn-outline-primary" type="submit"><i class="bi bi-heart"></i> Нравится</button>
+  </form>
+  <span class="badge text-bg-secondary"><%= song.likes %></span>
+  <% if (song.isOpenWish) { %>
+    <a class="btn btn-primary" href="/songs/<%= song.id %>/take">Беру!</a>
+  <% } %>
+</div>
+
+<dl class="row">
+  <dt class="col-sm-4">Статус</dt>
+  <dd class="col-sm-8"><span class="badge text-bg-secondary"><%= song.status ? song.status : 'без статуса' %></span></dd>
+
+  <dt class="col-sm-4"><%= song.isWish ? 'Заказал(а)' : 'Добавил(а)' %></dt>
+  <dd class="col-sm-8"><%= song.addedByName ? song.addedByName : 'неизвестно кто' %></dd>
+
+  <% if (song.performerNames.length > 0) { %>
+    <dt class="col-sm-4">Играют</dt>
+    <dd class="col-sm-8"><%= song.performerNames.join(', ') %></dd>
+  <% } %>
+
+  <% if (song.who_plays_what) { %>
+    <dt class="col-sm-4">Кто что играет</dt>
+    <dd class="col-sm-8"><%= song.who_plays_what %></dd>
+  <% } %>
+
+  <% if (song.gearList.length > 0) { %>
+    <dt class="col-sm-4">Нужно с площадки</dt>
+    <dd class="col-sm-8">
+      <% song.gearList.forEach(x => { %>
+        <span class="badge text-bg-secondary me-1"><%= x %></span>
+      <% }) %>
+    </dd>
+  <% } %>
+
+  <% if (song.own_gear) { %>
+    <dt class="col-sm-4">Приду со своим</dt>
+    <dd class="col-sm-8"><%= song.own_gear %></dd>
+  <% } %>
+
+  <% if (song.need_musicians) { %>
+    <dt class="col-sm-4">Нужны еще музыканты</dt>
+    <dd class="col-sm-8"><%= song.need_musicians %></dd>
+  <% } %>
+
+  <% if (song.note) { %>
+    <dt class="col-sm-4"><%= song.isWish ? 'Почему именно она' : 'Комментарий организаторам' %></dt>
+    <dd class="col-sm-8"><%= song.note %></dd>
+  <% } %>
+
+  <dt class="col-sm-4">Суфлёр</dt>
+  <dd class="col-sm-8"><%= song.needPrompter ? 'да' : 'нет' %></dd>
+
+  <dt class="col-sm-4">Текст на проекторе</dt>
+  <dd class="col-sm-8"><%= song.showOnProjector ? 'да' : 'нет' %></dd>
+
+  <% if (song.lyrics_url) { %>
+    <dt class="col-sm-4">Ссылка на текст</dt>
+    <dd class="col-sm-8">
+      <% if (song.lyricsUrlSafe != null) { %>
+        <a href="<%= song.lyricsUrlSafe %>" rel="noopener noreferrer" target="_blank"><%= song.lyricsUrlSafe %></a>
+      <% } else { %>
+        <%= song.lyrics_url %>
+      <% } %>
+    </dd>
+  <% } %>
+</dl>
+
+<% if (song.lyrics) { %>
+  <details class="mb-4">
+    <summary>Текст песни</summary>
+    <pre class="lyrics mt-2"><%= song.lyrics %></pre>
+  </details>
+<% } %>
+
+<%- include('partials/footer') %>

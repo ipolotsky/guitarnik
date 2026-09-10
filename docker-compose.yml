@@ -1,0 +1,30 @@
+name: guitarnik
+
+networks:
+  web:
+    external: true
+
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      PORT: "3000"
+    volumes:
+      - ./data:/app/data
+    networks: [web]
+    mem_limit: 256m
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/admin/login"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web
+      - traefik.http.routers.guitarnik.rule=Host(`${DOMAIN:-camp-guitar.taskyou.me}`)
+      - traefik.http.routers.guitarnik.entrypoints=websecure
+      - traefik.http.routers.guitarnik.tls.certresolver=letsencrypt
+      - traefik.http.services.guitarnik.loadbalancer.server.port=3000

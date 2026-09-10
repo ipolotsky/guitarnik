@@ -1,0 +1,15 @@
+<% const pageTitle = locals.title == null ? 'Страница не найдена' : locals.title; %>
+<%- include('partials/header', { title: pageTitle, active: '' }) %>
+
+<div class="row">
+  <div class="col-12 col-lg-8">
+    <h1 class="mb-3"><%= pageTitle %></h1>
+    <p>Такой страницы нет. Похоже, ссылка устарела или в адресе опечатка.</p>
+    <p class="mb-0">
+      <a class="btn btn-outline-secondary" href="/">На главную</a>
+      <a class="btn btn-outline-secondary" href="/songs">К песням</a>
+    </p>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

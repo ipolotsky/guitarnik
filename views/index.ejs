@@ -1,0 +1,80 @@
+<%- include('partials/header', { title: 'Главная', active: 'home' }) %>
+
+<% if (hasCover) { %>
+  <img src="/cover.jpg" class="img-fluid rounded w-100" alt="Гитарник">
+<% } else { %>
+  <div class="ratio ratio-21x9 bg-warning-subtle rounded">
+    <div class="d-flex align-items-center justify-content-center">
+      <i class="bi bi-music-note-beamed display-1 text-warning-emphasis"></i>
+    </div>
+  </div>
+<% } %>
+
+<h1 class="display-4 mt-4 mb-3">Гитарник</h1>
+
+<div class="d-grid gap-2 mb-2">
+  <a class="btn btn-primary btn-lg py-3" href="/add/perform">Добавить песню</a>
+</div>
+<div class="d-grid gap-2 d-sm-flex mb-5">
+  <a class="btn btn-outline-primary btn-lg flex-fill" href="/add/wish">Заказать песню</a>
+  <a class="btn btn-outline-primary btn-lg flex-fill" href="/helpers/join">Готов подыграть</a>
+</div>
+
+<div class="mb-5">
+  <p>Да будет ламповый гитарник, где уютно и лампово! Сделаем то, о чем скучали!</p>
+  <p>В этот раз с нами технология:</p>
+  <ul>
+    <li>для тех, кто хочет, чтоб ему/ей подпевали — на проекторе сзади будет скролиться текст</li>
+    <li>для тех, кто забывает (Руся/Поло) слова — на мониторе перед выступающим тоже будет «текст-суфлёр»</li>
+    <li>для тех, кто уверен в себе, все подсказки будут выключены (и включены лампово в любой момент по желанию)</li>
+    <li>возможен AI, который будет сам скролить текст, его присутствие на гитарнике ещё не подтверждено, наши менеджеры работают</li>
+  </ul>
+  <p>Также из коробки:</p>
+  <ul>
+    <li>микрофоны 2+</li>
+    <li>электрогитара + проц</li>
+    <li>басгитара</li>
+    <li>электроскрипка</li>
+    <li>пульт с входами и bluetooth, если нужна подложка</li>
+    <li>акустика</li>
+  </ul>
+</div>
+
+<div class="row row-cols-2 row-cols-md-4 g-3 mb-5">
+  <div class="col d-grid">
+    <a class="btn btn-outline-primary py-3" href="/songs">
+      <span class="display-6 d-block"><%= counts.songs %></span>
+      <span>песен заявлено</span>
+    </a>
+  </div>
+  <div class="col d-grid">
+    <a class="btn btn-outline-primary py-3" href="/songs?tab=wish">
+      <span class="display-6 d-block"><%= counts.wishes %></span>
+      <span>хотелок ищут исполнителя</span>
+    </a>
+  </div>
+  <div class="col d-grid">
+    <a class="btn btn-outline-primary py-3" href="/helpers?all=1">
+      <span class="display-6 d-block"><%= counts.participants %></span>
+      <span>участников</span>
+    </a>
+  </div>
+  <div class="col d-grid">
+    <a class="btn btn-outline-primary py-3" href="/helpers">
+      <span class="display-6 d-block"><%= counts.helpers %></span>
+      <span>готовы подыграть</span>
+    </a>
+  </div>
+</div>
+
+<% if (topSongs.length > 0) { %>
+  <h2 class="h3 mb-3">Топ по лайкам</h2>
+  <div class="row row-cols-1 row-cols-md-2 g-3 mb-3">
+    <% topSongs.forEach(x => { %>
+      <div class="col"><%- include('partials/song-card', { song: x, mode: 'play' }) %></div>
+    <% }) %>
+  </div>
+  <a href="/songs">Все песни</a>
+<% } %>
+
+<%- include('partials/footer') %>

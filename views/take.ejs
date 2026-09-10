@@ -1,0 +1,31 @@
+<%- include('partials/header', { title: 'Беру песню', active: 'songs' }) %>
+
+<h1 class="mb-1">Беру песню</h1>
+
+<p class="fs-5 mb-4">
+  <a class="link-body-emphasis" href="/songs/<%= song.id %>"><%= song.title %></a><% if (song.original_artist) { %> <span class="text-body-secondary">— <%= song.original_artist %></span><% } %>
+</p>
+
+<% if (error != null) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<form method="post" action="/songs/<%= song.id %>/take">
+  <%- include('partials/who') %>
+  <%- include('partials/partners') %>
+
+  <div class="mb-3">
+    <label class="form-label" for="who_plays_what">Кто что играет</label>
+    <textarea class="form-control" id="who_plays_what" name="who_plays_what" rows="2"><%= values.who_plays_what == null ? '' : values.who_plays_what %></textarea>
+  </div>
+
+  <%- include('partials/prompter') %>
+  <%- include('partials/gear') %>
+
+  <div class="d-grid gap-2 d-sm-flex">
+    <button class="btn btn-primary btn-lg" type="submit">Беру!</button>
+    <a class="btn btn-outline-secondary btn-lg" href="/songs/<%= song.id %>">Назад к песне</a>
+  </div>
+</form>
+
+<%- include('partials/footer') %>

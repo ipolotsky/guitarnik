@@ -1,0 +1,67 @@
+<%- include('../partials/header', { title: title, active: 'admin' }) %>
+
+<div class="row">
+  <div class="col-12 col-lg-8">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+      <h1 class="mb-0">Настройки таблицы</h1>
+      <a class="btn btn-outline-secondary btn-sm" href="/admin">К админке</a>
+    </div>
+
+    <% if (saved) { %>
+      <div class="alert alert-success">Настройки сохранены, перезапуск не нужен.</div>
+    <% } %>
+
+    <% if (errorMessage) { %>
+      <div class="alert alert-danger"><%= errorMessage %></div>
+    <% } %>
+
+    <form method="post" action="/admin/settings">
+      <div class="mb-3">
+        <label class="form-label" for="spreadsheetId">SPREADSHEET_ID</label>
+        <input class="form-control" type="text" id="spreadsheetId" name="spreadsheetId" value="<%= values.spreadsheetId %>">
+        <div class="form-text">Длинный кусок адреса таблицы между /d/ и /edit.</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="participants">Лист участников</label>
+        <input class="form-control" type="text" id="participants" name="participants" value="<%= values.sheets.participants %>">
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="songs">Лист песен</label>
+        <input class="form-control" type="text" id="songs" name="songs" value="<%= values.sheets.songs %>">
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="likes">Лист лайков</label>
+        <input class="form-control" type="text" id="likes" name="likes" value="<%= values.sheets.likes %>">
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <button class="btn btn-primary" type="submit">Сохранить</button>
+        <button class="btn btn-outline-secondary" type="submit" formaction="/admin/settings/check">Проверить связь</button>
+        <button class="btn btn-outline-secondary" type="submit" formaction="/admin/settings/create">Создать структуру</button>
+      </div>
+      <div class="form-text mt-2">Проверка и создание структуры работают с сохраненными настройками, поэтому сначала сохрани.</div>
+    </form>
+
+    <% if (checks) { %>
+      <h2 class="h4 mt-4 mb-3">Что нашлось в таблице</h2>
+      <div class="table-responsive">
+        <table class="table table-sm table-striped">
+          <thead>
+            <tr><th>Лист</th><th>Найден</th><th>Заголовки</th><th>Строк данных</th></tr>
+          </thead>
+          <tbody>
+            <% checks.forEach(x => { %>
+              <tr>
+                <td><%= x.name %></td>
+                <td><%= x.found ? 'да' : 'нет' %></td>
+                <td><%= x.hasHeaders ? 'на месте' : 'не совпадают' %></td>
+                <td><%= x.rows %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

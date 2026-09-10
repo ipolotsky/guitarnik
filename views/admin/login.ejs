@@ -1,0 +1,27 @@
+<%- include('../partials/header', { title: title, active: 'admin' }) %>
+
+<div class="row justify-content-center">
+  <div class="col-12 col-md-6 col-lg-5">
+    <h1 class="mb-4">Вход в админку</h1>
+
+    <% if (passwordMissing) { %>
+      <div class="alert alert-warning">
+        Переменная окружения ADMIN_PASSWORD не задана, поэтому войти нельзя. Задай ее и перезапусти сервер.
+      </div>
+    <% } %>
+
+    <% if (error) { %>
+      <div class="alert alert-danger"><%= error %></div>
+    <% } %>
+
+    <form method="post" action="/admin/login">
+      <div class="mb-3">
+        <label class="form-label" for="password">Пароль</label>
+        <input class="form-control" type="password" id="password" name="password" autocomplete="current-password" required>
+      </div>
+      <button class="btn btn-primary" type="submit">Войти</button>
+    </form>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

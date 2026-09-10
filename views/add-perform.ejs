@@ -1,0 +1,57 @@
+<%- include('partials/header', { title: 'Я сыграю сам', active: 'add' }) %>
+
+<h1 class="mb-4">Я сыграю сам</h1>
+
+<% if (error != null) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<form method="post" action="/add/perform">
+  <%- include('partials/who') %>
+  <%- include('partials/partners') %>
+
+  <div class="mb-3">
+    <label class="form-label" for="who_plays_what">Кто что играет</label>
+    <textarea class="form-control" id="who_plays_what" name="who_plays_what" rows="2"><%= values.who_plays_what == null ? '' : values.who_plays_what %></textarea>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label fw-semibold" for="title">Название песни</label>
+    <input class="form-control form-control-lg" type="text" id="title" name="title" value="<%= values.title == null ? '' : values.title %>" required>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label" for="original_artist">Автор оригинала</label>
+    <input class="form-control" type="text" id="original_artist" name="original_artist" value="<%= values.original_artist == null ? '' : values.original_artist %>">
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label" for="lyrics">Текст песни</label>
+    <textarea class="form-control" id="lyrics" name="lyrics" rows="8"><%= values.lyrics == null ? '' : values.lyrics %></textarea>
+    <div class="form-text">вставленный текст надёжнее ссылки — на экране будет ровно он</div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label" for="lyrics_url">Ссылка на текст</label>
+    <input class="form-control" type="text" id="lyrics_url" name="lyrics_url" value="<%= values.lyrics_url == null ? '' : values.lyrics_url %>">
+  </div>
+
+  <%- include('partials/prompter') %>
+  <%- include('partials/gear') %>
+
+  <div class="mb-3">
+    <label class="form-label" for="need_musicians">Нужны еще музыканты</label>
+    <input class="form-control" type="text" id="need_musicians" name="need_musicians" value="<%= values.need_musicians == null ? '' : values.need_musicians %>">
+  </div>
+
+  <div class="mb-4">
+    <label class="form-label" for="note">Комментарий организаторам</label>
+    <textarea class="form-control" id="note" name="note" rows="2"><%= values.note == null ? '' : values.note %></textarea>
+  </div>
+
+  <div class="d-grid gap-2 d-sm-flex">
+    <button class="btn btn-primary btn-lg" type="submit">Добавить песню</button>
+  </div>
+</form>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,58 @@
+<%- include('partials/header', { title: 'Песни', active: 'songs' }) %>
+
+<h1 class="mb-3">Песни</h1>
+
+<ul class="nav nav-tabs mb-3">
+  <li class="nav-item">
+    <a class="nav-link<%= tab === 'play' ? ' active' : '' %>" href="<%= links.tabPlay %>">Будут сыграны</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link<%= tab === 'wish' ? ' active' : '' %>" href="<%= links.tabWish %>">Хотелки</a>
+  </li>
+</ul>
+
+<% if (tab === 'wish') { %>
+  <p class="mb-3">Не играешь сам? Закажи песню — её может подхватить кто угодно.</p>
+<% } %>
+
+<form class="row g-2 mb-3" method="get" action="/songs">
+  <input type="hidden" name="tab" value="<%= tab %>">
+  <input type="hidden" name="sort" value="<%= sort %>">
+  <div class="col-12 col-sm">
+    <input class="form-control" type="search" name="q" value="<%= q %>" placeholder="Название или автор оригинала" aria-label="Поиск по песням">
+  </div>
+  <div class="col-12 col-sm-auto d-grid">
+    <button class="btn btn-outline-primary" type="submit">Найти</button>
+  </div>
+</form>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+  <span class="text-body-secondary">Сортировка:</span>
+  <a class="btn btn-sm <%= sort === 'likes' ? 'btn-primary' : 'btn-outline-primary' %>" href="<%= links.sortLikes %>">по лайкам</a>
+  <a class="btn btn-sm <%= sort === 'new' ? 'btn-primary' : 'btn-outline-primary' %>" href="<%= links.sortNew %>">сначала новые</a>
+</div>
+
+<% if (songs.length === 0) { %>
+  <div class="alert alert-secondary">
+    <% if (q !== '') { %>
+      По запросу «<%= q %>» ничего не нашлось.
+    <% } else if (tab === 'wish') { %>
+      Хотелок пока нет.
+    <% } else { %>
+      Песен пока нет.
+    <% } %>
+    <% if (tab === 'wish') { %>
+      <a href="/add/wish">Заказать песню</a>
+    <% } else { %>
+      <a href="/add/perform">Добавить песню</a>
+    <% } %>
+  </div>
+<% } else { %>
+  <div class="row row-cols-1 row-cols-md-2 g-3">
+    <% songs.forEach(x => { %>
+      <div class="col"><%- include('partials/song-card', { song: x, mode: tab === 'wish' ? 'wish' : 'play' }) %></div>
+    <% }) %>
+  </div>
+<% } %>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,13 @@
+<% const prompterValues = locals.values == null ? {} : locals.values; -%>
+<% const prompterSubmitted = locals.submitted === true; -%>
+<div class="mb-3">
+  <div class="form-check">
+    <input class="form-check-input" type="checkbox" name="need_prompter" value="1" id="need_prompter"<%= !prompterSubmitted || prompterValues.need_prompter ? ' checked' : '' %>>
+    <label class="form-check-label" for="need_prompter">Нужен суфлёр</label>
+  </div>
+  <div class="form-check">
+    <input class="form-check-input" type="checkbox" name="show_on_projector" value="1" id="show_on_projector"<%= !prompterSubmitted || prompterValues.show_on_projector ? ' checked' : '' %>>
+    <label class="form-check-label" for="show_on_projector">Показывать текст на проекторе, чтобы зал подпевал</label>
+  </div>
+  <div class="form-text">обе можно выключить, если играешь наизусть и хочешь тишину в зале</div>
+</div>

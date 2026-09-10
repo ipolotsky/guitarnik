@@ -1,0 +1,60 @@
+<%- include('partials/header', { title: title, active: 'helpers' }) %>
+<% const baseQuery = showAll ? 'all=1' : ''; -%>
+<% const filterHref = x => '/helpers?' + (baseQuery === '' ? '' : baseQuery + '&') + 'instrument=' + encodeURIComponent(x); -%>
+
+<h1 class="mb-3"><%= title %></h1>
+
+<% if (showAll) { %>
+  <p class="mb-3">Все, кто уже отметился на сайте. <a href="/helpers">Показать только тех, кто готов подыграть</a></p>
+<% } else { %>
+  <p class="mb-3">Эти люди готовы подыграть. Напиши тому, кто подходит под твою песню. <a href="/helpers?all=1">Показать всех участников</a></p>
+<% } %>
+
+<div class="d-flex flex-wrap gap-2 mb-4">
+  <a class="btn btn-sm <%= instrument === '' ? 'btn-primary' : 'btn-outline-primary' %>" href="/helpers<%= baseQuery === '' ? '' : '?' + baseQuery %>">Все</a>
+  <% instruments.forEach(x => { %>
+    <a class="btn btn-sm <%= instrument === x ? 'btn-primary' : 'btn-outline-primary' %>" href="<%= filterHref(x) %>"><%= x %></a>
+  <% }) %>
+</div>
+
+<% if (cards.length === 0) { %>
+  <div class="alert alert-secondary">
+    Тут пока никого нет. <a href="/helpers/join">Готов подыграть</a>
+  </div>
+<% } else { %>
+  <div class="row row-cols-1 row-cols-md-2 g-3">
+    <% cards.forEach(x => { %>
+      <div class="col">
+        <div class="card h-100">
+          <div class="card-body">
+            <h2 class="h5 card-title"><%= x.name %></h2>
+            <% if (x.instruments.length > 0) { %>
+              <p class="mb-2">
+                <% x.instruments.forEach(instrumentName => { %>
+                  <span class="badge text-bg-secondary me-1"><%= instrumentName %></span>
+                <% }) %>
+              </p>
+            <% } %>
+            <% if (showAll && x.canHelp) { %>
+              <p class="mb-2"><span class="badge text-bg-primary">готов подыграть</span></p>
+            <% } %>
+            <% if (x.about) { %>
+              <p class="mb-2"><%= x.about %></p>
+            <% } %>
+            <% if (x.telegram != null) { %>
+              <p class="mb-0"><a href="https://t.me/<%= x.telegram %>" rel="noopener noreferrer" target="_blank">@<%= x.telegram %></a></p>
+            <% } else if (x.telegramText) { %>
+              <p class="mb-0 text-body-secondary"><%= x.telegramText %></p>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+
+<div class="mt-4">
+  <a class="btn btn-primary btn-lg" href="/helpers/join">Готов подыграть</a>
+</div>
+
+<%- include('partials/footer') %>

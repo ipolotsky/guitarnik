@@ -1,0 +1,267 @@
+<%- include('../partials/header', { title: title, active: 'admin' }) %>
+
+<% const shortDate = x => (typeof x === 'string' && x.length >= 16 ? `${x.slice(0, 10)} ${x.slice(11, 16)}` : (x || '')); %>
+<% const participantName = x => (participantMap[x] != null ? participantMap[x].name : x); %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <h1 class="mb-0">Админка</h1>
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-outline-secondary btn-sm" href="/admin/export/setlist.json">setlist.json</a>
+    <a class="btn btn-outline-secondary btn-sm" href="/admin/settings">Настройки таблицы</a>
+    <form method="post" action="/admin/logout">
+      <button class="btn btn-outline-secondary btn-sm" type="submit">Выйти</button>
+    </form>
+  </div>
+</div>
+
+<ul class="nav nav-tabs mb-4">
+  <li class="nav-item">
+    <a class="nav-link <%= tab === 'summary' ? 'active' : '' %>" href="/admin?tab=summary">Сводка</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link <%= tab === 'participants' ? 'active' : '' %>" href="/admin?tab=participants">Участники</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link <%= tab === 'songs' ? 'active' : '' %>" href="/admin?tab=songs">Песни</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link <%= tab === 'likes' ? 'active' : '' %>" href="/admin?tab=likes">Лайки</a>
+  </li>
+</ul>
+
+<% if (tab === 'summary') { %>
+  <% if (notice != null) { %>
+    <div class="alert alert-<%= notice.kind %>"><%= notice.text %></div>
+  <% } %>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h2 class="h5 card-title">Хранилище</h2>
+      <p class="mb-2">
+        Данные лежат в базе на сервере: участников <%= backupStatus.counts.participants %>, песен <%= backupStatus.counts.songs %>, лайков <%= backupStatus.counts.likes %>.
+      </p>
+      <p class="mb-2">
+        <% if (!syncStatus.configured) { %>
+          Google-таблица не подключена, сайт работает только на своей базе. Подключить можно в настройках таблицы, после этого нажать «Выгрузить все в таблицу».
+        <% } else if (syncStatus.error) { %>
+          Синхронизация с таблицей сбоит с <%= shortDate(syncStatus.errorAt) %>: <%= syncStatus.error %>
+        <% } else if (syncStatus.pushedAt) { %>
+          Каждая запись уходит в таблицу, последняя <%= shortDate(syncStatus.pushedAt) %>.
+        <% } else { %>
+          Таблица подключена, но данные в нее еще не уходили. Нажми «Выгрузить все в таблицу».
+        <% } %>
+        <% if (syncStatus.configured && syncStatus.pending > 0) { %>
+          В очереди на отправку: <%= syncStatus.pending %>.
+        <% } %>
+      </p>
+      <p class="mb-3">
+        <% if (backupStatus.at) { %>
+          Последний бекап <%= shortDate(backupStatus.at) %>, всего файлов <%= backupStatus.files.length %>. Бекап делается каждую ночь.
+        <% } else { %>
+          Бекапов еще нет, первый сделается ночью.
+        <% } %>
+      </p>
+      <div class="d-flex flex-wrap gap-2">
+        <form method="post" action="/admin/backup">
+          <button class="btn btn-outline-secondary btn-sm" type="submit">Сделать бекап сейчас</button>
+        </form>
+        <% if (syncStatus.configured) { %>
+          <form method="post" action="/admin/sync/push">
+            <button class="btn btn-outline-secondary btn-sm" type="submit">Выгрузить все в таблицу</button>
+          </form>
+          <form method="post" action="/admin/sync/pull">
+            <button class="btn btn-outline-secondary btn-sm" type="submit">Загрузить из таблицы</button>
+          </form>
+        <% } %>
+        <a class="btn btn-outline-secondary btn-sm" href="/admin/export/data.json">data.json</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="card h-100"><div class="card-body">
+        <div class="fs-2"><%= summary.total %></div>
+        <div>активных песен</div>
+      </div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card h-100"><div class="card-body">
+        <div class="fs-2"><%= summary.prompter %></div>
+        <div>просят суфлера</div>
+      </div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card h-100"><div class="card-body">
+        <div class="fs-2"><%= summary.projector %></div>
+        <div>разрешают текст на проекторе</div>
+      </div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card h-100"><div class="card-body">
+        <div class="fs-2"><%= summary.openWishes.length %></div>
+        <div>хотелок без исполнителя</div>
+      </div></div>
+    </div>
+  </div>
+
+  <h2 class="h4 mb-3">Оборудование площадки</h2>
+  <% if (summary.gear.length === 0) { %>
+    <p>Пока ничего не запрошено.</p>
+  <% } else { %>
+    <div class="table-responsive mb-4">
+      <table class="table table-sm table-striped">
+        <thead>
+          <tr><th>Оборудование</th><th>Сколько раз</th></tr>
+        </thead>
+        <tbody>
+          <% summary.gear.forEach(x => { %>
+            <tr><td><%= x.name %></td><td><%= x.count %></td></tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+
+  <h2 class="h4 mb-3">Кто приносит свое</h2>
+  <% if (summary.ownGear.length === 0) { %>
+    <p>Никто ничего своего не заявил.</p>
+  <% } else { %>
+    <div class="table-responsive mb-4">
+      <table class="table table-sm table-striped">
+        <thead>
+          <tr><th>Песня</th><th>Кто</th><th>Что приносит</th></tr>
+        </thead>
+        <tbody>
+          <% summary.ownGear.forEach(x => { %>
+            <tr><td><%= x.title %></td><td><%= x.who %></td><td><%= x.gear %></td></tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+
+  <h2 class="h4 mb-3">Хотелки без исполнителя</h2>
+  <% if (summary.openWishes.length === 0) { %>
+    <p>Все хотелки разобрали.</p>
+  <% } else { %>
+    <div class="table-responsive">
+      <table class="table table-sm table-striped">
+        <thead>
+          <tr><th>Песня</th><th>Автор оригинала</th><th>Заказал</th><th>Лайки</th></tr>
+        </thead>
+        <tbody>
+          <% summary.openWishes.forEach(x => { %>
+            <tr>
+              <td><a href="/songs/<%= x.id %>"><%= x.title %></a></td>
+              <td><%= x.original_artist %></td>
+              <td><%= x.addedByName %></td>
+              <td><%= x.likes %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+<% } %>
+
+<% if (tab === 'participants') { %>
+  <div class="table-responsive">
+    <table class="table table-sm table-striped">
+      <thead>
+        <tr>
+          <th>Имя</th><th>Телеграм</th><th>Инструменты</th><th>Готов подыграть</th>
+          <th>На чем подыграет</th><th>О себе</th><th>Добавлен</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% participants.forEach(x => { %>
+          <tr>
+            <td><%= x.name %></td>
+            <td><%= x.telegram %></td>
+            <td><%= x.instruments %></td>
+            <td><%= x.can_help === 'TRUE' ? 'да' : 'нет' %></td>
+            <td><%= x.help_instruments %></td>
+            <td><%= x.about %></td>
+            <td><%= shortDate(x.created_at) %></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+  <% if (participants.length === 0) { %>
+    <p>Участников пока нет.</p>
+  <% } %>
+<% } %>
+
+<% if (tab === 'songs') { %>
+  <div class="table-responsive">
+    <table class="table table-sm table-striped align-middle">
+      <thead>
+        <tr>
+          <th>Название</th><th>Автор оригинала</th><th>Тип</th><th>Кто добавил</th><th>Исполнители</th>
+          <th>Оборудование</th><th>Свое</th><th>Суфлер</th><th>Проектор</th><th>Лайки</th>
+          <th>Статус</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% songs.forEach(song => { %>
+          <tr>
+            <td><a href="/songs/<%= song.id %>"><%= song.title %></a></td>
+            <td><%= song.original_artist %></td>
+            <td><%= song.isWish ? 'хотелка' : 'играет сам' %></td>
+            <td><%= song.addedByName || participantName(song.added_by) %></td>
+            <td><%= song.performerNames.join(', ') %></td>
+            <td><%= song.gearList.join(', ') %></td>
+            <td><%= song.own_gear %></td>
+            <td><%= song.needPrompter ? 'да' : 'нет' %></td>
+            <td><%= song.showOnProjector ? 'да' : 'нет' %></td>
+            <td><%= song.likes %></td>
+            <td>
+              <form class="d-flex gap-1" method="post" action="/admin/songs/<%= song.id %>/status">
+                <select class="form-select form-select-sm" name="status" aria-label="Статус песни">
+                  <% reference.STATUSES.forEach(x => { %>
+                    <option value="<%= x %>" <%= song.status === x ? 'selected' : '' %>><%= x %></option>
+                  <% }); %>
+                </select>
+                <button class="btn btn-sm btn-primary" type="submit">Сохранить</button>
+              </form>
+            </td>
+            <td>
+              <form method="post" action="/admin/songs/<%= song.id %>/delete">
+                <button class="btn btn-sm btn-outline-secondary" type="submit">Удалить</button>
+              </form>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+  <% if (songs.length === 0) { %>
+    <p>Песен пока нет.</p>
+  <% } %>
+<% } %>
+
+<% if (tab === 'likes') { %>
+  <div class="table-responsive">
+    <table class="table table-sm table-striped">
+      <thead>
+        <tr><th>Песня</th><th>Кто лайкнул</th><th>Когда</th></tr>
+      </thead>
+      <tbody>
+        <% likes.forEach(x => { %>
+          <tr>
+            <td><%= songTitles[x.song_id] != null ? songTitles[x.song_id] : x.song_id %></td>
+            <td><%= x.name %></td>
+            <td><%= shortDate(x.created_at) %></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+  <% if (likes.length === 0) { %>
+    <p>Лайков пока нет.</p>
+  <% } %>
+<% } %>
+
+<%- include('../partials/footer') %>

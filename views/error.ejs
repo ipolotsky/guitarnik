@@ -1,0 +1,21 @@
+<% const pageTitle = locals.title == null ? 'Что-то сломалось' : locals.title; %>
+<% const pageMessage = locals.message == null ? '' : locals.message; %>
+<%- include('partials/header', { title: pageTitle, active: '' }) %>
+
+<div class="row">
+  <div class="col-12 col-lg-8">
+    <h1 class="mb-3"><%= pageTitle %></h1>
+    <% if (pageMessage !== '') { %>
+      <div class="alert alert-danger mb-3"><%= pageMessage %></div>
+    <% } %>
+    <% if (locals.isSheets) { %>
+      <p>Проверь SPREADSHEET_ID, названия листов и то, что таблица расшарена на сервис-аккаунт.</p>
+    <% } %>
+    <p class="mb-0">
+      <a class="btn btn-outline-secondary" href="/admin/settings">Настройки таблицы</a>
+      <a class="btn btn-outline-secondary" href="/">На главную</a>
+    </p>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

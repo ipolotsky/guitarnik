@@ -1,0 +1,7 @@
+node_modules
+.env
+data/config.json
+data/guitarnik.sqlite
+data/guitarnik.sqlite-wal
+data/guitarnik.sqlite-shm
+data/backups

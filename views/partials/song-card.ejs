@@ -1,0 +1,29 @@
+<div class="card h-100">
+  <div class="card-body d-flex flex-column">
+    <h2 class="h5 card-title mb-1">
+      <a class="link-body-emphasis text-decoration-none" href="/songs/<%= song.id %>"><%= song.title %></a>
+    </h2>
+    <% if (song.original_artist) { %>
+      <p class="text-body-secondary mb-2"><%= song.original_artist %></p>
+    <% } %>
+    <% if (mode === 'wish') { %>
+      <p class="mb-2">заказал(а) <%= song.addedByName ? song.addedByName : 'кто-то из наших' %></p>
+    <% } else if (song.performerNames.length > 0) { %>
+      <p class="mb-2">играют: <%= song.performerNames.join(', ') %></p>
+    <% } %>
+    <% if (mode !== 'wish' && song.status && song.status !== reference.STATUS_DECLARED) { %>
+      <p class="mb-2"><span class="badge text-bg-secondary"><%= song.status %></span></p>
+    <% } %>
+    <div class="d-flex flex-wrap align-items-center gap-2 mt-auto pt-2">
+      <form method="post" action="/songs/<%= song.id %>/like" data-like-song="<%= song.id %>">
+        <input type="hidden" name="back" value="<%= locals.currentPath == null ? '/songs' : locals.currentPath %>">
+        <input type="hidden" name="name" value="">
+        <button class="btn btn-outline-primary btn-sm" type="submit"><i class="bi bi-heart"></i> Нравится</button>
+      </form>
+      <span class="badge text-bg-secondary"><%= song.likes %></span>
+      <% if (mode === 'wish') { %>
+        <a class="btn btn-primary btn-sm ms-auto" href="/songs/<%= song.id %>/take">Беру!</a>
+      <% } %>
+    </div>
+  </div>
+</div>

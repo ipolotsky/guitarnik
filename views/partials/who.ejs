@@ -1,0 +1,32 @@
+<% const whoValues = locals.values == null ? {} : locals.values; -%>
+<% const whoInstruments = whoValues.new_instruments == null ? [] : [].concat(whoValues.new_instruments); -%>
+<div class="mb-3">
+  <label class="form-label fw-semibold" for="participant_id">Кто ты?</label>
+  <select class="form-select form-select-lg" id="participant_id" name="participant_id" data-who required>
+    <option value="">Выбери себя из списка</option>
+    <% participants.forEach(x => { %>
+      <option value="<%= x.id %>"<%= whoValues.participant_id === x.id ? ' selected' : '' %>><%= x.instruments ? x.name + ' - ' + x.instruments : x.name %></option>
+    <% }) %>
+    <option value="<%= reference.NEW_PARTICIPANT_OPTION %>"<%= whoValues.participant_id === reference.NEW_PARTICIPANT_OPTION ? ' selected' : '' %>>Меня тут еще нет</option>
+  </select>
+</div>
+<div class="border rounded p-3 mb-3" data-who-new <%= whoValues.participant_id === reference.NEW_PARTICIPANT_OPTION ? '' : 'hidden' %>>
+  <div class="mb-3">
+    <label class="form-label" for="new_name">Как тебя зовут</label>
+    <input class="form-control" type="text" id="new_name" name="new_name" value="<%= whoValues.new_name == null ? '' : whoValues.new_name %>">
+  </div>
+  <div class="mb-3">
+    <label class="form-label" for="new_telegram">Телеграм</label>
+    <input class="form-control" type="text" id="new_telegram" name="new_telegram" value="<%= whoValues.new_telegram == null ? '' : whoValues.new_telegram %>">
+    <div class="form-text">Необязательно, нужен только чтобы позвать тебя</div>
+  </div>
+  <div>
+    <span class="form-label">На чем играешь</span>
+    <div class="d-flex flex-wrap gap-2">
+      <% reference.INSTRUMENTS.forEach((x, i) => { %>
+        <input class="btn-check" type="checkbox" name="new_instruments" value="<%= x %>" id="new-instrument-<%= i %>" autocomplete="off"<%= whoInstruments.indexOf(x) === -1 ? '' : ' checked' %>>
+        <label class="btn btn-outline-primary btn-sm" for="new-instrument-<%= i %>"><%= x %></label>
+      <% }) %>
+    </div>
+  </div>
+</div>
