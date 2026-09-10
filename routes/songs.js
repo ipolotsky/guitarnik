@@ -1,5 +1,6 @@
 const express = require('express');
 const data = require('../lib/data');
+const store = require('../lib/store');
 const helpers = require('../lib/helpers');
 const reference = require('../lib/reference');
 
@@ -50,8 +51,13 @@ router.post('/:id/like', async (req, res) => {
     res.status(404).render('not-found');
     return;
   }
+  if (store.hasVote(req.deviceId, song.id)) {
+    res.redirect(helpers.safeBackPath(req.body.back, '/songs'));
+    return;
+  }
   const name = helpers.asText(req.body.name).slice(0, LIKE_NAME_LIMIT);
   await data.addLike(song.id, name);
+  store.addVote(req.deviceId, song.id);
   res.redirect(helpers.safeBackPath(req.body.back, '/songs'));
 });
 

@@ -17,6 +17,7 @@ h1, .h1 { font-size: 2.5rem; }
   --bs-btn-color: #1b0e08; --bs-btn-bg: #ff6b3d; --bs-btn-border-color: #ff6b3d;
   --bs-btn-hover-color: #1b0e08; --bs-btn-hover-bg: #ff8552; --bs-btn-hover-border-color: #ff8552;
   --bs-btn-active-color: #1b0e08; --bs-btn-active-bg: #e8562a; --bs-btn-active-border-color: #e8562a;
+  --bs-btn-disabled-color: #1b0e08; --bs-btn-disabled-bg: #ff6b3d; --bs-btn-disabled-border-color: #ff6b3d;
 }
 
 .btn-outline-primary {

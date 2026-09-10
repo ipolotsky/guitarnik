@@ -7,6 +7,8 @@ const session = require('express-session');
 const reference = require('./lib/reference');
 const backup = require('./lib/backup');
 const sync = require('./lib/sync');
+const device = require('./lib/device');
+const store = require('./lib/store');
 const home = require('./routes/home');
 const songs = require('./routes/songs');
 const add = require('./routes/add');
@@ -40,6 +42,8 @@ app.use((req, res, next) => {
   res.locals.reference = reference;
   res.locals.isAdmin = !!req.session.isAdmin;
   res.locals.currentPath = req.originalUrl;
+  req.deviceId = device.ensure(req, res);
+  res.locals.votedSongs = store.listVotes(req.deviceId);
   next();
 });
 

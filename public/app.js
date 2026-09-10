@@ -1,7 +1,5 @@
 const PARTICIPANT_KEY = 'guitarnik.participant';
 
-const LIKES_KEY = 'guitarnik.likes';
-
 const NEW_PARTICIPANT_OPTION = '__new__';
 
 const NAME_SEPARATOR = ' - ';
@@ -127,38 +125,16 @@ const setupLikes = () => {
   if (forms.length === 0) {
     return;
   }
-  const stored = readStored(LIKES_KEY);
-  const liked = Array.isArray(stored) ? stored : [];
   const participant = readStored(PARTICIPANT_KEY);
+  if (participant == null || !participant.name) {
+    return;
+  }
   forms.forEach(form => {
-    const songId = form.getAttribute('data-like-song');
     const nameInput = form.querySelector('input[name="name"]');
-    if (nameInput != null && participant != null && participant.name) {
+    if (nameInput != null) {
       nameInput.value = participant.name;
     }
-    if (liked.indexOf(songId) !== -1) {
-      markLiked(form);
-    }
-    form.addEventListener('submit', () => {
-      if (liked.indexOf(songId) === -1) {
-        liked.push(songId);
-        writeStored(LIKES_KEY, liked);
-      }
-    });
   });
-};
-
-const markLiked = form => {
-  const button = form.querySelector('button');
-  if (button != null) {
-    button.classList.remove('btn-outline-primary');
-    button.classList.add('btn-primary');
-  }
-  const icon = form.querySelector('i');
-  if (icon != null) {
-    icon.classList.remove('bi-heart');
-    icon.classList.add('bi-heart-fill');
-  }
 };
 
 const setupPartners = () => {
