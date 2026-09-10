@@ -539,6 +539,133 @@ test('админ удаляет участника, песни остаются'
   tabs.forEach(x => assert.equal(x.status, 200));
 });
 
+test('админ удаляет песню насовсем, вместе с лайками и местом в лайнапе', async t => {
+  const server = await support.startServer();
+  t.after(() => server.stop());
+  const guest = support.createClient(server.base);
+  const admin = support.createClient(server.base);
+
+  await guest.post('/helpers/join', { participant_id: '__new__', new_name: 'Аня', help_instruments: 'вокал' });
+  const form = await guest.get('/add/perform');
+  const participantId = idFrom(form.text, 'p_');
+  await guest.post('/add/perform', { participant_id: participantId, title: 'Лишняя' });
+  await guest.post('/add/perform', { participant_id: participantId, title: 'Нужная' });
+  const list = await guest.get('/songs');
+  const doomed = /\/songs\/(s_[A-Za-z0-9_-]{8})/.exec(list.text.slice(list.text.indexOf('Лишняя') - 300))[1];
+  await guest.post(`/songs/${doomed}/like`, { name: 'Аня', back: '/songs' });
+
+  await admin.post('/admin/login', { password: support.ADMIN_PASSWORD });
+  await admin.post('/admin/lineup/fill', {});
+  const beforeDump = JSON.parse((await admin.get('/admin/export/data.json')).text);
+  assert.equal(beforeDump.songs.length, 2);
+  assert.equal(beforeDump.likes.length, 1);
+  assert.equal(beforeDump.lineup.length, 2);
+
+  const removed = await admin.post(`/admin/songs/${doomed}/delete`, {});
+  assert.equal(removed.status, 302);
+  assert.match(String(removed.location), /notice=song-removed/);
+
+  const dump = JSON.parse((await admin.get('/admin/export/data.json')).text);
+  assert.equal(dump.songs.length, 1, 'песня удалена из базы, а не помечена отмененной');
+  assert.equal(dump.songs[0].title, 'Нужная');
+  assert.equal(dump.likes.length, 0, 'лайки удаленной песни ушли вместе с ней');
+  assert.equal(dump.votes.length, 0, 'голоса тоже');
+  assert.equal(dump.lineup.length, 1, 'из лайнапа песня пропала');
+
+  const songsTab = await admin.get('/admin?tab=songs');
+  assert.doesNotMatch(songsTab.text, /Лишняя/, 'в админке строки больше нет');
+
+  const again = await admin.post(`/admin/songs/${doomed}/delete`, {});
+  assert.match(String(again.location), /notice=error/, 'повторное удаление не роняет админку');
+
+  const gone = await guest.get(`/songs/${doomed}`);
+  assert.equal(gone.status, 404);
+});
+
+test('админ правит песню и участника', async t => {
+  const server = await support.startServer();
+  t.after(() => server.stop());
+  const guest = support.createClient(server.base);
+  const admin = support.createClient(server.base);
+
+  await guest.post('/helpers/join', { participant_id: '__new__', new_name: 'Аня', help_instruments: 'вокал' });
+  const form = await guest.get('/add/perform');
+  const participantId = idFrom(form.text, 'p_');
+  await guest.post('/add/perform', { participant_id: participantId, title: 'С опечаткай', original_artist: 'Кто-то' });
+  const list = await guest.get('/songs');
+  const songId = idFrom(list.text, 's_');
+
+  await admin.post('/admin/login', { password: support.ADMIN_PASSWORD });
+
+  const songForm = await admin.get(`/admin/songs/${songId}/edit`);
+  assert.equal(songForm.status, 200);
+  assert.match(songForm.text, /С опечаткай/);
+
+  const savedSong = await admin.post(`/admin/songs/${songId}/edit`, {
+    title: 'Без опечатки',
+    original_artist: 'Аквариум',
+    type: 'perform',
+    status: 'в сетлисте',
+    added_by: participantId,
+    performers: participantId,
+    gear: 'микрофон',
+    need_prompter: '1',
+    lyrics: 'первая строка',
+    note: 'поправлено',
+  });
+  assert.equal(savedSong.status, 302);
+  assert.match(String(savedSong.location), /notice=saved/);
+
+  const songPage = await guest.get(`/songs/${songId}`);
+  assert.match(songPage.text, /Без опечатки/);
+  assert.match(songPage.text, /Аквариум/);
+  assert.match(songPage.text, /в сетлисте/);
+  assert.doesNotMatch(songPage.text, /С опечаткай/);
+
+  const emptyTitle = await admin.post(`/admin/songs/${songId}/edit`, { title: '', type: 'perform', status: 'заявлена' });
+  assert.equal(emptyTitle.status, 200);
+  assert.match(emptyTitle.text, /Название песни не может быть пустым/);
+
+  const participantForm = await admin.get(`/admin/participants/${participantId}/edit`);
+  assert.equal(participantForm.status, 200);
+  assert.match(participantForm.text, /Аня/);
+
+  const savedParticipant = await admin.post(`/admin/participants/${participantId}/edit`, {
+    name: 'Анна',
+    telegram: 'https://t.me/anna_music',
+    instruments: ['вокал', 'клавиши'],
+    can_help: '1',
+    help_instruments: 'клавиши',
+    about: 'играю на клавишах',
+  });
+  assert.equal(savedParticipant.status, 302);
+
+  const helpersPage = await guest.get('/helpers');
+  assert.match(helpersPage.text, /Анна/);
+  assert.match(helpersPage.text, /клавиши/);
+  assert.match(helpersPage.text, /anna_music/);
+
+  const noName = await admin.post(`/admin/participants/${participantId}/edit`, { name: ' ' });
+  assert.equal(noName.status, 200);
+  assert.match(noName.text, /Имя не может быть пустым/);
+});
+
+test('заказ песни по умолчанию анонимный', async t => {
+  const server = await support.startServer();
+  t.after(() => server.stop());
+  const guest = support.createClient(server.base);
+
+  await guest.post('/helpers/join', { participant_id: '__new__', new_name: 'Аня', help_instruments: 'вокал' });
+
+  const wishForm = await guest.get('/add/wish');
+  assert.match(wishForm.text, /Аноним, не указывать/, 'первый вариант анонимный');
+  assert.match(wishForm.text, /data-who-remember="0"/, 'на этой форме себя не подставляют');
+
+  const performForm = await guest.get('/add/perform');
+  assert.match(performForm.text, /data-who-remember="1"/, 'на своей песне участник подставляется');
+  assert.doesNotMatch(performForm.text, /Аноним, не указывать/);
+});
+
 test('вкладки, поиск и вид списка не сбрасывают друг друга', async t => {
   const server = await support.startServer();
   t.after(() => server.stop());

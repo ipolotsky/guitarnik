@@ -10,7 +10,18 @@ document.addEventListener('DOMContentLoaded', () => {
   setupPicker();
   setupPartners();
   setupRemember();
+  setupConfirm();
 });
+
+const setupConfirm = () => {
+  Array.from(document.querySelectorAll('[data-confirm]')).forEach(form => {
+    form.addEventListener('submit', event => {
+      if (!window.confirm(form.getAttribute('data-confirm'))) {
+        event.preventDefault();
+      }
+    });
+  });
+};
 
 const setupPicker = () => {
   const picker = document.querySelector('[data-picker]');
@@ -85,7 +96,8 @@ const setupWho = () => {
     return;
   }
   const newBlock = document.querySelector('[data-who-new]');
-  const stored = readStored(PARTICIPANT_KEY);
+  const remembers = select.getAttribute('data-who-remember') !== '0';
+  const stored = remembers ? readStored(PARTICIPANT_KEY) : null;
   if (select.value === '' && stored != null && stored.id) {
     for (let i = 0; i < select.options.length; i += 1) {
       if (select.options[i].value === stored.id) {

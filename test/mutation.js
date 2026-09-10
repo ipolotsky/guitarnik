@@ -157,6 +157,42 @@ const MUTATIONS = [
     replace: '      patch.performers = performers;',
   },
   {
+    name: 'удаление песни снова только помечает статусом',
+    file: 'routes/admin.js',
+    find: '    await data.removeSong(req.params.id);',
+    replace: '    await data.updateSong(req.params.id, { status: reference.STATUS_CANCELLED });',
+  },
+  {
+    name: 'удаление песни не трогает ее лайки',
+    file: 'lib/store.js',
+    find: "  await db.query('DELETE FROM likes WHERE song_id = $1', [songId]);",
+    replace: '',
+  },
+  {
+    name: 'удаление песни не убирает ее из лайнапа',
+    file: 'lib/store.js',
+    find: "  await db.query('DELETE FROM lineup WHERE song_id = $1', [songId]);",
+    replace: '',
+  },
+  {
+    name: 'правка песни не сохраняет название',
+    file: 'routes/admin.js',
+    find: "      title: requireText(req, 'title', 'Название песни не может быть пустым'),",
+    replace: "      original_artist: bodyField(req, 'original_artist').trim(),",
+  },
+  {
+    name: 'правка участника принимает пустое имя',
+    file: 'routes/admin.js',
+    find: "      name: requireText(req, 'name', 'Имя не может быть пустым'),",
+    replace: "      name: bodyField(req, 'name'),",
+  },
+  {
+    name: 'форма заказа снова подставляет запомненного участника',
+    file: 'views/partials/who.ejs',
+    find: `data-who-remember="<%= whoOptional ? '0' : '1' %>"`,
+    replace: 'data-who-remember="1"',
+  },
+  {
     name: 'ссылка на текст рендерится без проверки',
     file: 'views/song.ejs',
     find: '<% if (song.lyricsUrlSafe != null) { %>',

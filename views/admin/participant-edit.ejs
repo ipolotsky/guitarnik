@@ -1,0 +1,67 @@
+<%- include('../partials/header', { title: title, active: 'admin' }) %>
+<% const listOf = value => (value == null ? [] : String(value).split(',').map(x => x.trim())); -%>
+<% const instrumentList = listOf(participant.instruments); -%>
+<% const helpList = listOf(participant.help_instruments); -%>
+<% const isOn = value => value === true || value === 'TRUE' || value === '1' || value === 'on'; -%>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <h1 class="h2 mb-0">Правка участника</h1>
+  <a class="btn btn-outline-secondary btn-sm" href="/admin?tab=participants">К списку участников</a>
+</div>
+
+<% if (error != null) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<form method="post" action="/admin/participants/<%= participant.id %>/edit">
+  <div class="row g-3 mb-3">
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-semibold" for="name">Имя</label>
+      <input class="form-control" type="text" id="name" name="name" value="<%= participant.name %>" required>
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label" for="telegram">Телеграм</label>
+      <input class="form-control" type="text" id="telegram" name="telegram" value="<%= participant.telegram %>">
+      <div class="form-text">Можно ссылкой, с собакой или просто ником</div>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <span class="form-label fw-semibold">На чем играет</span>
+    <div class="d-flex flex-wrap gap-2">
+      <% reference.INSTRUMENTS.forEach((x, i) => { %>
+        <input class="btn-check" type="checkbox" name="instruments" value="<%= x %>" id="edit-instrument-<%= i %>" autocomplete="off"<%= instrumentList.indexOf(x) === -1 ? '' : ' checked' %>>
+        <label class="btn btn-outline-primary btn-sm" for="edit-instrument-<%= i %>"><%= x %></label>
+      <% }) %>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" name="can_help" value="1" id="can_help"<%= isOn(participant.can_help) ? ' checked' : '' %>>
+      <label class="form-check-label" for="can_help">Готов подыграть другим</label>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <span class="form-label fw-semibold">На чем готов подыграть</span>
+    <div class="d-flex flex-wrap gap-2">
+      <% reference.INSTRUMENTS.forEach((x, i) => { %>
+        <input class="btn-check" type="checkbox" name="help_instruments" value="<%= x %>" id="edit-help-<%= i %>" autocomplete="off"<%= helpList.indexOf(x) === -1 ? '' : ' checked' %>>
+        <label class="btn btn-outline-primary btn-sm" for="edit-help-<%= i %>"><%= x %></label>
+      <% }) %>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <label class="form-label" for="about">О себе</label>
+    <textarea class="form-control" id="about" name="about" rows="3"><%= participant.about %></textarea>
+  </div>
+
+  <div class="d-flex flex-wrap gap-2">
+    <button class="btn btn-primary" type="submit">Сохранить</button>
+    <a class="btn btn-outline-secondary" href="/admin?tab=participants">Отмена</a>
+  </div>
+</form>
+
+<%- include('../partials/footer') %>

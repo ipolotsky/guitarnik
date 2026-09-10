@@ -7,8 +7,8 @@
   <% if (whoCrowded) { %>
     <input class="form-control mb-2" type="search" placeholder="Начни печатать свое имя" aria-label="Поиск по участникам" data-who-search>
   <% } %>
-  <select class="form-select form-select-lg" id="participant_id" name="participant_id" data-who<%= whoOptional ? '' : ' required' %>>
-    <option value="<%= '' %>"><%= whoOptional ? 'Не указывать, я аноним' : 'Выбери себя из списка' %></option>
+  <select class="form-select form-select-lg" id="participant_id" name="participant_id" data-who data-who-remember="<%= whoOptional ? '0' : '1' %>"<%= whoOptional ? '' : ' required' %>>
+    <option value="<%= '' %>"><%= whoOptional ? 'Аноним, не указывать' : 'Выбери себя из списка' %></option>
     <% participants.forEach(x => { %>
       <option value="<%= x.id %>" data-name="<%= x.name %>"<%= whoValues.participant_id === x.id ? ' selected' : '' %>><%= x.instruments ? x.name + ' - ' + x.instruments : x.name %></option>
     <% }) %>

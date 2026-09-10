@@ -163,6 +163,109 @@ async function purgeParticipant(id) {
   await data.removeParticipant(id);
 }
 
+router.get('/songs/:id/edit', async (req, res) => {
+  const view = await loadData();
+  const song = view.songs.find(x => x.id === req.params.id);
+  if (song == null) {
+    res.redirect(noticeUrl('songs', 'error:Такой песни нет'));
+    return;
+  }
+  res.render('admin/song-edit', {
+    title: 'Правка песни',
+    active: 'admin',
+    song: song,
+    participants: view.participants,
+    error: null,
+  });
+});
+
+router.post('/songs/:id/edit', async (req, res) => {
+  try {
+    await data.updateSong(req.params.id, {
+      title: requireText(req, 'title', 'Название песни не может быть пустым'),
+      original_artist: bodyField(req, 'original_artist').trim(),
+      type: reference.SONG_TYPES.indexOf(bodyField(req, 'type')) >= 0 ? bodyField(req, 'type') : 'perform',
+      added_by: bodyField(req, 'added_by').trim(),
+      performers: helpers.asList(req.body.performers),
+      who_plays_what: bodyField(req, 'who_plays_what').trim(),
+      need_musicians: bodyField(req, 'need_musicians').trim(),
+      gear: helpers.asKnownList(req.body.gear, reference.GEAR),
+      own_gear: bodyField(req, 'own_gear').trim(),
+      lyrics: bodyField(req, 'lyrics'),
+      lyrics_url: bodyField(req, 'lyrics_url').trim(),
+      need_prompter: hasField(req, 'need_prompter'),
+      show_on_projector: hasField(req, 'show_on_projector'),
+      note: bodyField(req, 'note').trim(),
+      status: reference.STATUSES.indexOf(bodyField(req, 'status')) >= 0 ? bodyField(req, 'status') : reference.STATUS_DECLARED,
+    });
+    res.redirect(noticeUrl('songs', 'saved'));
+  } catch (error) {
+    const view = await loadData();
+    const song = view.songs.find(x => x.id === req.params.id);
+    if (song == null) {
+      res.redirect(noticeUrl('songs', `error:${error.message}`));
+      return;
+    }
+    res.render('admin/song-edit', {
+      title: 'Правка песни',
+      active: 'admin',
+      song: Object.assign({}, song, req.body),
+      participants: view.participants,
+      error: error.message,
+    });
+  }
+});
+
+router.get('/participants/:id/edit', async (req, res) => {
+  const participants = await data.getParticipants();
+  const participant = participants.find(x => x.id === req.params.id);
+  if (participant == null) {
+    res.redirect(noticeUrl('participants', 'error:Такого участника нет'));
+    return;
+  }
+  res.render('admin/participant-edit', {
+    title: 'Правка участника',
+    active: 'admin',
+    participant: participant,
+    error: null,
+  });
+});
+
+router.post('/participants/:id/edit', async (req, res) => {
+  try {
+    await data.updateParticipant(req.params.id, {
+      name: requireText(req, 'name', 'Имя не может быть пустым'),
+      telegram: bodyField(req, 'telegram').trim(),
+      instruments: helpers.asKnownList(req.body.instruments, reference.INSTRUMENTS),
+      can_help: hasField(req, 'can_help'),
+      help_instruments: helpers.asKnownList(req.body.help_instruments, reference.INSTRUMENTS),
+      about: bodyField(req, 'about').trim(),
+    });
+    res.redirect(noticeUrl('participants', 'saved'));
+  } catch (error) {
+    const participants = await data.getParticipants();
+    const participant = participants.find(x => x.id === req.params.id);
+    if (participant == null) {
+      res.redirect(noticeUrl('participants', `error:${error.message}`));
+      return;
+    }
+    res.render('admin/participant-edit', {
+      title: 'Правка участника',
+      active: 'admin',
+      participant: Object.assign({}, participant, req.body),
+      error: error.message,
+    });
+  }
+});
+
+function requireText(req, name, message) {
+  const value = bodyField(req, name).trim();
+  if (value === '') {
+    throw new Error(message);
+  }
+  return value;
+}
+
 router.post('/songs/:id/status', async (req, res) => {
   const status = bodyField(req, 'status');
   if (reference.STATUSES.indexOf(status) < 0) {
@@ -173,7 +276,16 @@ router.post('/songs/:id/status', async (req, res) => {
 });
 
 router.post('/songs/:id/delete', async (req, res) => {
-  res.redirect(await changeStatus(req.params.id, reference.STATUS_CANCELLED));
+  try {
+    const song = await data.getSongs();
+    if (song.find(x => x.id === req.params.id) == null) {
+      throw new Error('Такой песни уже нет, страница обновилась');
+    }
+    await data.removeSong(req.params.id);
+    res.redirect(noticeUrl('songs', 'song-removed'));
+  } catch (error) {
+    res.redirect(noticeUrl('songs', `error:${error.message}`));
+  }
 });
 
 async function changeStatus(id, status) {
@@ -348,6 +460,15 @@ function pickNotice(value) {
   }
   if (text === 'filled') {
     return { kind: 'success', text: 'Лайнап собран из заявленных песен, порядок по лайкам' };
+  }
+  if (text === 'saved') {
+    return { kind: 'success', text: 'Изменения сохранены' };
+  }
+  if (text === 'song-removed') {
+    return { kind: 'success', text: 'Песня удалена вместе со своими лайками' };
+  }
+  if (text === 'participant') {
+    return { kind: 'success', text: 'Участник удален, песни остались на месте' };
   }
   if (text.startsWith('error:')) {
     return { kind: 'danger', text: text.slice('error:'.length).slice(0, 300) };
