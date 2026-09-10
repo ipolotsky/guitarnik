@@ -14,11 +14,6 @@
     <input class="form-control form-control-lg" type="text" id="title" name="title" value="<%= values.title == null ? '' : values.title %>" required>
   </div>
 
-  <div class="mb-3">
-    <label class="form-label" for="original_artist">Автор оригинала</label>
-    <input class="form-control" type="text" id="original_artist" name="original_artist" value="<%= values.original_artist == null ? '' : values.original_artist %>">
-  </div>
-
   <div class="mb-4">
     <label class="form-label" for="lyrics">Текст песни</label>
     <textarea class="form-control" id="lyrics" name="lyrics" rows="6"><%= values.lyrics == null ? '' : values.lyrics %></textarea>
@@ -26,8 +21,13 @@
   </div>
 
   <details class="border rounded p-3 mb-4"<%= submitted ? ' open' : '' %>>
-    <summary class="fw-semibold">Еще детали <span class="fw-normal text-body-secondary">— состав, оборудование, пожелания</span></summary>
+    <summary class="fw-semibold">Еще детали <span class="fw-normal text-body-secondary">— автор, состав, оборудование</span></summary>
     <div class="pt-3">
+      <div class="mb-3">
+        <label class="form-label" for="original_artist">Автор оригинала</label>
+        <input class="form-control" type="text" id="original_artist" name="original_artist" value="<%= values.original_artist == null ? '' : values.original_artist %>">
+      </div>
+
       <%- include('partials/partners') %>
 
       <div class="mb-3">
