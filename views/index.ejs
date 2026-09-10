@@ -1,26 +1,28 @@
 <%- include('partials/header', { title: 'Главная', active: 'home' }) %>
 
-<% if (hasCover) { %>
-  <img src="/cover.jpg" class="img-fluid rounded w-100" alt="Гитарник">
-<% } else { %>
-  <div class="ratio ratio-21x9 bg-warning-subtle rounded">
-    <div class="d-flex align-items-center justify-content-center">
-      <i class="bi bi-music-note-beamed display-1 text-warning-emphasis"></i>
+<div class="hero">
+  <% if (hasCover) { %>
+    <img src="/cover.jpg" class="cover rounded" alt="Гитарник">
+  <% } else { %>
+    <div class="ratio ratio-21x9 bg-secondary-subtle rounded">
+      <div class="d-flex align-items-center justify-content-center">
+        <i class="bi bi-music-note-beamed display-1 text-body-secondary"></i>
+      </div>
     </div>
+  <% } %>
+
+  <h1 class="display-4 mt-4 mb-3">Гитарник</h1>
+
+  <div class="d-grid gap-2 mb-2">
+    <a class="btn btn-primary btn-lg py-3" href="/add/perform">Добавить песню</a>
   </div>
-<% } %>
-
-<h1 class="display-4 mt-4 mb-3">Гитарник</h1>
-
-<div class="d-grid gap-2 mb-2">
-  <a class="btn btn-primary btn-lg py-3" href="/add/perform">Добавить песню</a>
-</div>
-<div class="d-grid gap-2 d-sm-flex mb-5">
-  <a class="btn btn-outline-primary btn-lg flex-fill" href="/add/wish">Заказать песню</a>
-  <a class="btn btn-outline-primary btn-lg flex-fill" href="/helpers/join">Готов подыграть</a>
+  <div class="d-grid gap-2 d-sm-flex mb-5">
+    <a class="btn btn-outline-primary btn-lg flex-fill" href="/add/wish">Заказать песню</a>
+    <a class="btn btn-outline-primary btn-lg flex-fill" href="/helpers/join">Готов подыграть</a>
+  </div>
 </div>
 
-<div class="mb-5">
+<div class="hero mb-5">
   <p>Да будет ламповый гитарник, где уютно и лампово! Сделаем то, о чем скучали!</p>
   <p>В этот раз с нами технология:</p>
   <ul>

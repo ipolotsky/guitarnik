@@ -12,7 +12,7 @@
 <form method="post" action="/helpers/join">
   <%- include('partials/who') %>
 
-  <div class="mb-3">
+  <div class="mb-4">
     <span class="form-label fw-semibold">На чем готов подыграть</span>
     <div class="d-flex flex-wrap gap-2">
       <% reference.INSTRUMENTS.forEach((x, i) => { %>
@@ -22,17 +22,22 @@
     </div>
   </div>
 
-  <div class="mb-3">
-    <label class="form-label" for="about">О себе</label>
-    <textarea class="form-control" id="about" name="about" rows="3"><%= values.about == null ? '' : values.about %></textarea>
-    <div class="form-text">Что играешь, что любишь, с чем звать</div>
-  </div>
+  <details class="border rounded p-3 mb-4"<%= submitted ? ' open' : '' %>>
+    <summary class="fw-semibold">Еще детали <span class="fw-normal text-body-secondary">— о себе и телеграм</span></summary>
+    <div class="pt-3">
+      <div class="mb-3">
+        <label class="form-label" for="about">О себе</label>
+        <textarea class="form-control" id="about" name="about" rows="3"><%= values.about == null ? '' : values.about %></textarea>
+        <div class="form-text">Что играешь, что любишь, с чем звать</div>
+      </div>
 
-  <div class="mb-4">
-    <label class="form-label" for="telegram">Телеграм</label>
-    <input class="form-control" type="text" id="telegram" name="telegram" value="<%= values.telegram == null ? '' : values.telegram %>">
-    <div class="form-text">Чтобы с тобой могли связаться</div>
-  </div>
+      <div class="mb-0">
+        <label class="form-label" for="telegram">Телеграм</label>
+        <input class="form-control" type="text" id="telegram" name="telegram" value="<%= values.telegram == null ? '' : values.telegram %>">
+        <div class="form-text">Чтобы с тобой могли связаться</div>
+      </div>
+    </div>
+  </details>
 
   <div class="d-grid gap-2 d-sm-flex">
     <button class="btn btn-primary btn-lg" type="submit">Готов подыграть</button>
