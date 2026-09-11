@@ -56,9 +56,15 @@ const MUTATIONS = [
   },
   {
     name: 'лайк ставится даже когда голос уже был',
+    file: 'lib/data.js',
+    find: '  const claimed = await store.claimVote(device, songId);\n  if (!claimed) {\n    return null;\n  }',
+    replace: '  await store.claimVote(device, songId);',
+  },
+  {
+    name: 'хотелку можно перехватить у того, кто ее уже взял',
     file: 'routes/songs.js',
-    find: '  if (!claimed) {',
-    replace: '  if (false) {',
+    find: '    const claimed = await store.claimWish(song.id, performers, reference.STATUS_DECLARED);\n    if (!claimed) {',
+    replace: '    const claimed = await store.claimWish(song.id, performers, reference.STATUS_DECLARED);\n    if (false) {',
   },
   {
     name: 'лайнап считается опубликованным всегда',
@@ -165,13 +171,13 @@ const MUTATIONS = [
   {
     name: 'удаление песни не трогает ее лайки',
     file: 'lib/store.js',
-    find: "  await db.query('DELETE FROM likes WHERE song_id = $1', [songId]);",
+    find: "    await client.query('DELETE FROM likes WHERE song_id = $1', [songId]);",
     replace: '',
   },
   {
     name: 'удаление песни не убирает ее из лайнапа',
     file: 'lib/store.js',
-    find: "  await db.query('DELETE FROM lineup WHERE song_id = $1', [songId]);",
+    find: "    await client.query('DELETE FROM lineup WHERE song_id = $1', [songId]);",
     replace: '',
   },
   {
@@ -191,6 +197,18 @@ const MUTATIONS = [
     file: 'views/partials/who.ejs',
     find: `data-who-remember="<%= whoRemember ? '1' : '0' %>"`,
     replace: 'data-who-remember="1"',
+  },
+  {
+    name: 'автор не лайкает свою песню',
+    file: 'routes/add.js',
+    find: '    await data.addLikeFrom(req.deviceId, song.id, who.name);',
+    replace: '',
+  },
+  {
+    name: 'заказ не лайкается автоматически',
+    file: 'routes/add.js',
+    find: "    await data.addLikeFrom(req.deviceId, song.id, who == null ? '' : who.name);",
+    replace: '',
   },
   {
     name: 'ссылка на текст рендерится без проверки',

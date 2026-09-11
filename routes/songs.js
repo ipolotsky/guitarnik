@@ -63,14 +63,8 @@ router.post('/:id/like', async (req, res) => {
     res.status(404).render('not-found');
     return;
   }
-  const claimed = await store.claimVote(req.deviceId, song.id);
-  if (!claimed) {
-    await finishLike(req, res, song.id, true);
-    return;
-  }
   const name = helpers.asText(req.body.name).slice(0, LIKE_NAME_LIMIT);
-  const like = await data.addLike(song.id, name);
-  await store.attachLike(req.deviceId, song.id, like.id);
+  await data.addLikeFrom(req.deviceId, song.id, name);
   await finishLike(req, res, song.id, true);
 });
 

@@ -77,11 +77,8 @@ test('гость проходит весь путь: участник, песн�
   const songId = idFrom(list.text, 's_');
   assert.ok(songId);
 
-  assert.equal(likesOf(list.text, songId), 0);
-  const liked = await guest.post(`/songs/${songId}/like`, { name: 'Аня', back: '/songs' });
-  assert.equal(liked.status, 302);
-  const afterLike = await guest.get('/songs');
-  assert.equal(likesOf(afterLike.text, songId), 1);
+  assert.equal(likesOf(list.text, songId), 1, 'автор сразу лайкает свою песню');
+  assert.match(list.text, /bi-heart-fill/, 'сердечко у автора закрашено');
 
   await guest.post(`/songs/${songId}/like`, { name: 'Аня', back: '/songs' });
   const afterSecond = await guest.get('/songs');
@@ -90,7 +87,7 @@ test('гость проходит весь путь: участник, песн�
   const unliked = await guest.post(`/songs/${songId}/unlike`, { back: '/songs' });
   assert.equal(unliked.status, 302);
   const afterUnlike = await guest.get('/songs');
-  assert.equal(likesOf(afterUnlike.text, songId), 0, 'голос снимается');
+  assert.equal(likesOf(afterUnlike.text, songId), 0, 'автор может снять свой голос');
   assert.match(afterUnlike.text, /bi-heart"><\/i> 0/, 'сердечко снова пустое');
 
   await guest.post(`/songs/${songId}/like`, { name: 'Аня', back: '/songs' });
@@ -102,6 +99,8 @@ test('гость проходит весь путь: участник, песн�
   assert.match(wish.text, /Заказ добавлен/);
   const wishes = await guest.get('/songs?tab=wish');
   assert.match(wishes.text, /Перемен/);
+  const wishIdForLike = /\/songs\/(s_[A-Za-z0-9_-]{8})/.exec(wishes.text.slice(wishes.text.indexOf('Перемен') - 300))[1];
+  assert.equal(likesOf(wishes.text, wishIdForLike), 1, 'заказ тоже сразу лайкнут');
   assert.match(wishes.text, /кто-то из наших/, 'заказ без имени остается анонимным');
 
   const wishId = idFrom(wishes.text.slice(wishes.text.indexOf('Перемен') - 200), 's_');
@@ -270,7 +269,9 @@ test('лайнап: скрыт, собирается, переставляетс
 
   const songsList = await guest.get('/songs');
   const firstId = /\/songs\/(s_[A-Za-z0-9_-]{8})/.exec(songsList.text.slice(songsList.text.indexOf('Первая песня') - 300))[1];
-  await guest.post(`/songs/${firstId}/like`, { name: 'Аня', back: '/songs' });
+  const fan = support.createClient(server.base);
+  await fan.get('/songs');
+  await fan.post(`/songs/${firstId}/like`, { name: 'Гость', back: '/songs' });
 
   await admin.post('/admin/login', { password: support.ADMIN_PASSWORD });
   const filled = await admin.post('/admin/lineup/fill', {});
@@ -566,7 +567,7 @@ test('админ удаляет песню насовсем, вместе с л�
   await admin.post('/admin/lineup/fill', {});
   const beforeDump = JSON.parse((await admin.get('/admin/export/data.json')).text);
   assert.equal(beforeDump.songs.length, 2);
-  assert.equal(beforeDump.likes.length, 1);
+  assert.equal(beforeDump.likes.length, 2, 'у каждой песни автолайк автора');
   assert.equal(beforeDump.lineup.length, 2);
 
   const removed = await admin.post(`/admin/songs/${doomed}/delete`, {});
@@ -576,8 +577,9 @@ test('админ удаляет песню насовсем, вместе с л�
   const dump = JSON.parse((await admin.get('/admin/export/data.json')).text);
   assert.equal(dump.songs.length, 1, 'песня удалена из базы, а не помечена отмененной');
   assert.equal(dump.songs[0].title, 'Нужная');
-  assert.equal(dump.likes.length, 0, 'лайки удаленной песни ушли вместе с ней');
-  assert.equal(dump.votes.length, 0, 'голоса тоже');
+  assert.equal(dump.likes.length, 1, 'лайк удаленной песни ушел, лайк оставшейся цел');
+  assert.equal(dump.likes[0].song_id, dump.songs[0].id);
+  assert.equal(dump.votes.length, 1, 'голос удаленной песни тоже ушел');
   assert.equal(dump.lineup.length, 1, 'из лайнапа песня пропала');
 
   const songsTab = await admin.get('/admin?tab=songs');
@@ -676,6 +678,47 @@ test('заказ песни по умолчанию анонимный', async t
 
   const joinForm = await guest.get('/helpers/join');
   assert.match(joinForm.text, /data-who-remember="1"/, 'в «Готов подыграть» участник по-прежнему подставляется');
+});
+
+test('хотелку нельзя перехватить у того, кто ее уже взял', async t => {
+  const server = await support.startServer();
+  t.after(() => server.stop());
+  const first = support.createClient(server.base);
+  const second = support.createClient(server.base);
+
+  await first.post('/helpers/join', { participant_id: '__new__', new_name: 'Аня', help_instruments: 'вокал' });
+  await first.post('/helpers/join', { participant_id: '__new__', new_name: 'Борис', help_instruments: 'бас' });
+  await first.post('/add/wish', { title: 'Кто успел' });
+  const wishes = await first.get('/songs?tab=wish');
+  const wishId = idFrom(wishes.text, 's_');
+  const form = await first.get(`/songs/${wishId}/take`);
+  const ids = (form.text.match(/p_[A-Za-z0-9_-]{8}/g) || []).filter((x, i, list) => list.indexOf(x) === i);
+
+  const taken = await first.post(`/songs/${wishId}/take`, { participant_id: ids[0] });
+  assert.equal(taken.status, 200);
+  assert.match(taken.text, /Песня твоя/);
+
+  const late = await second.post(`/songs/${wishId}/take`, { participant_id: ids[1] });
+  assert.equal(late.status, 302, 'опоздавшего отправляют на страницу песни');
+  assert.match(String(late.location), new RegExp(wishId));
+
+  const page = await first.get(`/songs/${wishId}`);
+  assert.match(page.text, /Аня/, 'состав остался за первым');
+  assert.doesNotMatch(page.text, /Борис/, 'второй не перезаписал состав');
+
+  await first.post('/add/wish', { title: 'Одновременно' });
+  const more = await first.get('/songs?tab=wish');
+  const raceId = /\/songs\/(s_[A-Za-z0-9_-]{8})/.exec(more.text.slice(more.text.indexOf('Одновременно') - 300))[1];
+  const together = await Promise.all([
+    first.post(`/songs/${raceId}/take`, { participant_id: ids[0] }),
+    second.post(`/songs/${raceId}/take`, { participant_id: ids[1] }),
+  ]);
+  const winners = together.filter(x => x.status === 200 && /Песня твоя/.test(x.text));
+  assert.equal(winners.length, 1, 'при одновременном взятии выигрывает ровно один');
+
+  const racePage = await first.get(`/songs/${raceId}`);
+  const performers = (racePage.text.match(/Аня|Борис/g) || []).filter((x, i, list) => list.indexOf(x) === i);
+  assert.equal(performers.length, 1, `в составе остался один исполнитель, а не ${performers.join(' и ')}`);
 });
 
 test('битая кука устройства не роняет сайт', async t => {

@@ -28,7 +28,7 @@ router.post('/perform', async (req, res) => {
     }
     const who = await helpers.resolveWho(req.body, participants);
     const partnerIds = await helpers.resolvePartners(req.body, participants);
-    await data.addSong({
+    const song = await data.addSong({
       title: title,
       original_artist: helpers.asText(req.body.original_artist),
       type: 'perform',
@@ -45,6 +45,7 @@ router.post('/perform', async (req, res) => {
       note: helpers.asText(req.body.note),
       status: reference.STATUS_DECLARED,
     });
+    await data.addLikeFrom(req.deviceId, song.id, who.name);
     res.render('done', {
       title: 'Песня добавлена',
       active: 'add',
@@ -83,7 +84,7 @@ router.post('/wish', async (req, res) => {
     const who = helpers.asText(req.body.participant_id) === ''
       ? null
       : await helpers.resolveWho(req.body, participants);
-    await data.addSong({
+    const song = await data.addSong({
       title: title,
       original_artist: helpers.asText(req.body.original_artist),
       type: 'wish',
@@ -94,6 +95,7 @@ router.post('/wish', async (req, res) => {
       note: helpers.asText(req.body.note),
       status: reference.STATUS_LOOKING,
     });
+    await data.addLikeFrom(req.deviceId, song.id, who == null ? '' : who.name);
     res.render('done', {
       title: 'Заказ добавлен',
       active: 'add',
