@@ -18,10 +18,7 @@
     <div class="pt-3">
       <%- include('partials/partners') %>
 
-      <div class="mb-3">
-        <label class="form-label" for="who_plays_what">Кто что играет</label>
-        <textarea class="form-control" id="who_plays_what" name="who_plays_what" rows="2"><%= values.who_plays_what == null ? '' : values.who_plays_what %></textarea>
-      </div>
+      <%- include('partials/arrangement') %>
 
       <%- include('partials/prompter') %>
       <%- include('partials/gear') %>

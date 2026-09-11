@@ -189,6 +189,7 @@ router.post('/songs/:id/edit', async (req, res) => {
       added_by: bodyField(req, 'added_by').trim(),
       performers: helpers.asList(req.body.performers),
       who_plays_what: bodyField(req, 'who_plays_what').trim(),
+      tonality: bodyField(req, 'tonality').trim().slice(0, 40),
       need_musicians: bodyField(req, 'need_musicians').trim(),
       gear: helpers.asKnownList(req.body.gear, reference.GEAR),
       own_gear: bodyField(req, 'own_gear').trim(),

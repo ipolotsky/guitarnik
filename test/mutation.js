@@ -211,6 +211,18 @@ const MUTATIONS = [
     replace: '',
   },
   {
+    name: 'тональность не сохраняется',
+    file: 'routes/add.js',
+    find: "      tonality: helpers.asText(req.body.tonality).slice(0, 40),",
+    replace: "      tonality: '',",
+  },
+  {
+    name: 'подсказка про поиск текста пропала',
+    file: 'views/add-perform.ejs',
+    find: "    <%- include('partials/lyrics-hint') %>",
+    replace: '',
+  },
+  {
     name: 'ссылка на текст рендерится без проверки',
     file: 'views/song.ejs',
     find: '<% if (song.lyricsUrlSafe != null) { %>',

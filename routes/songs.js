@@ -112,6 +112,7 @@ router.post('/:id/take', async (req, res) => {
     }
     await data.updateSong(song.id, {
       who_plays_what: helpers.asText(req.body.who_plays_what),
+      tonality: helpers.asText(req.body.tonality).slice(0, 40),
       need_prompter: !!req.body.need_prompter,
       show_on_projector: !!req.body.show_on_projector,
       gear: helpers.asKnownList(req.body.gear, reference.GEAR),

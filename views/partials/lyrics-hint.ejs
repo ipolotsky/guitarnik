@@ -1,0 +1,4 @@
+<% const hintTitle = locals.values == null || locals.values.title == null ? '' : String(locals.values.title); -%>
+<div class="form-text mt-1" data-lyrics-hint<%= hintTitle.trim() === '' ? ' hidden' : '' %>>
+  <a href="https://amdm.ru/search/?q=<%= encodeURIComponent(hintTitle) %>" target="_blank" rel="noopener noreferrer" data-lyrics-link>Искать текст на amdm</a>
+</div>

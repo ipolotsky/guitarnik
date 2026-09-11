@@ -1,0 +1,13 @@
+<% const arrangementValues = locals.values == null ? {} : locals.values; -%>
+<div class="row g-3 mb-3">
+  <div class="col-12 col-sm-8">
+    <label class="form-label" for="who_plays_what">Кто на чем играет и кто поет</label>
+    <textarea class="form-control" id="who_plays_what" name="who_plays_what" rows="2" placeholder="Аня поет, Борис на басу, Гриша на кахоне"><%= arrangementValues.who_plays_what == null ? '' : arrangementValues.who_plays_what %></textarea>
+    <div class="form-text">Свободным текстом, чтобы на площадке сразу знали, кому что готовить</div>
+  </div>
+  <div class="col-12 col-sm-4">
+    <label class="form-label" for="tonality">Тональность</label>
+    <input class="form-control" type="text" id="tonality" name="tonality" placeholder="Am, G, C#m" value="<%= arrangementValues.tonality == null ? '' : arrangementValues.tonality %>">
+    <div class="form-text">Если играешь не в оригинале</div>
+  </div>
+</div>

@@ -28,6 +28,7 @@
     <label class="form-label" for="lyrics">Текст песни</label>
     <textarea class="form-control" id="lyrics" name="lyrics" rows="6"><%= values.lyrics == null ? '' : values.lyrics %></textarea>
     <div class="form-text">вставленный текст надёжнее ссылки — на экране будет ровно он</div>
+    <%- include('partials/lyrics-hint') %>
   </div>
 
   <details class="border rounded p-3 mb-4"<%= submitted ? ' open' : '' %>>
@@ -40,10 +41,7 @@
 
       <%- include('partials/partners') %>
 
-      <div class="mb-3">
-        <label class="form-label" for="who_plays_what">Кто что играет</label>
-        <textarea class="form-control" id="who_plays_what" name="who_plays_what" rows="2"><%= values.who_plays_what == null ? '' : values.who_plays_what %></textarea>
-      </div>
+      <%- include('partials/arrangement') %>
 
       <div class="mb-3">
         <label class="form-label" for="lyrics_url">Ссылка на текст</label>

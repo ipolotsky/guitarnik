@@ -39,6 +39,7 @@
         <label class="form-label" for="lyrics">Текст песни</label>
         <textarea class="form-control" id="lyrics" name="lyrics" rows="6"><%= values.lyrics == null ? '' : values.lyrics %></textarea>
         <div class="form-text">если знаешь, где взять текст — вставь, это сэкономит время тому, кто возьмётся</div>
+        <%- include('partials/lyrics-hint') %>
       </div>
 
       <div class="mb-3">

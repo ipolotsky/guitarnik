@@ -721,6 +721,37 @@ test('хотелку нельзя перехватить у того, кто е�
   assert.equal(performers.length, 1, `в составе остался один исполнитель, а не ${performers.join(' и ')}`);
 });
 
+test('тональность сохраняется и видна, рядом есть поиск текста', async t => {
+  const server = await support.startServer();
+  t.after(() => server.stop());
+  const guest = support.createClient(server.base);
+
+  const form = await guest.get('/add/perform');
+  assert.match(form.text, /Кто на чем играет и кто поет/, 'вопрос про состав стал понятнее');
+  assert.match(form.text, /Искать текст на amdm/, 'подсказка про поиск текста на месте');
+  assert.match(form.text, /amdm\.ru\/search/, 'ссылка ведет на поиск');
+
+  await guest.post('/helpers/join', { participant_id: '__new__', new_name: 'Аня', help_instruments: 'вокал' });
+  const withParticipant = await guest.get('/add/perform');
+  const participantId = idFrom(withParticipant.text, 'p_');
+  await guest.post('/add/perform', {
+    participant_id: participantId,
+    title: 'В другой тональности',
+    tonality: 'Am',
+    who_plays_what: 'Аня поет, Борис на басу',
+  });
+
+  const list = await guest.get('/songs');
+  const songId = idFrom(list.text, 's_');
+  const page = await guest.get(`/songs/${songId}`);
+  assert.match(page.text, /Тональность/);
+  assert.match(page.text, /Am/);
+  assert.match(page.text, /Аня поет, Борис на басу/);
+
+  const withTitle = await guest.post('/add/perform', { participant_id: participantId, title: '' });
+  assert.match(withTitle.text, /Напиши название песни/);
+});
+
 test('битая кука устройства не роняет сайт', async t => {
   const server = await support.startServer();
   t.after(() => server.stop());

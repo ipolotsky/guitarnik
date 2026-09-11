@@ -11,7 +11,24 @@ document.addEventListener('DOMContentLoaded', () => {
   setupPartners();
   setupRemember();
   setupConfirm();
+  setupLyricsHint();
 });
+
+const setupLyricsHint = () => {
+  const title = document.querySelector('#title');
+  const hint = document.querySelector('[data-lyrics-hint]');
+  const link = document.querySelector('[data-lyrics-link]');
+  if (title == null || hint == null || link == null) {
+    return;
+  }
+  const update = () => {
+    const value = title.value.trim();
+    hint.hidden = value === '';
+    link.href = 'https://amdm.ru/search/?q=' + encodeURIComponent(value);
+  };
+  title.addEventListener('input', update);
+  update();
+};
 
 const setupConfirm = () => {
   Array.from(document.querySelectorAll('[data-confirm]')).forEach(form => {

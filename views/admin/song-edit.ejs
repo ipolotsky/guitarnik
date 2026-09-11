@@ -65,9 +65,15 @@
     </div>
   </div>
 
-  <div class="mb-3">
-    <label class="form-label" for="who_plays_what">Кто что играет</label>
-    <textarea class="form-control" id="who_plays_what" name="who_plays_what" rows="2"><%= song.who_plays_what %></textarea>
+  <div class="row g-3 mb-3">
+    <div class="col-12 col-sm-8">
+      <label class="form-label" for="who_plays_what">Кто на чем играет и кто поет</label>
+      <textarea class="form-control" id="who_plays_what" name="who_plays_what" rows="2"><%= song.who_plays_what %></textarea>
+    </div>
+    <div class="col-12 col-sm-4">
+      <label class="form-label" for="tonality">Тональность</label>
+      <input class="form-control" type="text" id="tonality" name="tonality" value="<%= song.tonality %>">
+    </div>
   </div>
 
   <div class="mb-3">

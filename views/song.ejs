@@ -42,8 +42,13 @@
   <% } %>
 
   <% if (song.who_plays_what) { %>
-    <dt class="col-sm-4">Кто что играет</dt>
+    <dt class="col-sm-4">Кто на чем играет</dt>
     <dd class="col-sm-8"><%= song.who_plays_what %></dd>
+  <% } %>
+
+  <% if (song.tonality) { %>
+    <dt class="col-sm-4">Тональность</dt>
+    <dd class="col-sm-8"><%= song.tonality %></dd>
   <% } %>
 
   <% if (song.gearList.length > 0) { %>
