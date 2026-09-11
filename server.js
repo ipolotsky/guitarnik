@@ -83,9 +83,13 @@ app.use((error, req, res, next) => {
 
 database.ensureSchema()
   .then(() => {
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`Гитарник слушает порт ${PORT}`);
       sync.start();
+    });
+    server.on('error', error => {
+      console.error(`Не получилось занять порт ${PORT}: ${error.message}`);
+      process.exit(1);
     });
   })
   .catch(error => {

@@ -110,9 +110,13 @@ router.post('/:id/take', async (req, res) => {
   try {
     const who = await helpers.resolveWho(req.body, context.participants);
     const partnerIds = await helpers.resolvePartners(req.body, context.participants);
+    const performers = [who.id].concat(partnerIds.filter(x => x !== who.id)).join(', ');
+    const claimed = await store.claimWish(song.id, performers, reference.STATUS_DECLARED);
+    if (!claimed) {
+      res.redirect('/songs/' + encodeURIComponent(song.id));
+      return;
+    }
     await data.updateSong(song.id, {
-      performers: [who.id].concat(partnerIds.filter(x => x !== who.id)),
-      status: reference.STATUS_DECLARED,
       who_plays_what: helpers.asText(req.body.who_plays_what),
       need_prompter: !!req.body.need_prompter,
       show_on_projector: !!req.body.show_on_projector,

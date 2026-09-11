@@ -268,12 +268,20 @@ test('лайнап: скрыт, собирается, переставляетс
   await guest.post('/add/perform', { participant_id: participantId, title: 'Первая песня' });
   await guest.post('/add/perform', { participant_id: participantId, title: 'Вторая песня' });
 
+  const songsList = await guest.get('/songs');
+  const firstId = /\/songs\/(s_[A-Za-z0-9_-]{8})/.exec(songsList.text.slice(songsList.text.indexOf('Первая песня') - 300))[1];
+  await guest.post(`/songs/${firstId}/like`, { name: 'Аня', back: '/songs' });
+
   await admin.post('/admin/login', { password: support.ADMIN_PASSWORD });
   const filled = await admin.post('/admin/lineup/fill', {});
   assert.match(String(filled.location), /notice=filled/);
 
   let lineupTab = await admin.get('/admin?tab=lineup');
-  assert.deepEqual(titlesOfLineup(lineupTab.text), ['Первая песня', 'Вторая песня']);
+  assert.deepEqual(
+    titlesOfLineup(lineupTab.text),
+    ['Первая песня', 'Вторая песня'],
+    'сборка ставит песни по числу лайков',
+  );
 
   const breakAdded = await admin.post('/admin/lineup/add-break', { label: 'Перерыв 15 минут' });
   assert.equal(breakAdded.status, 302);
@@ -664,6 +672,43 @@ test('заказ песни по умолчанию анонимный', async t
   const performForm = await guest.get('/add/perform');
   assert.match(performForm.text, /data-who-remember="1"/, 'на своей песне участник подставляется');
   assert.doesNotMatch(performForm.text, /Аноним, не указывать/);
+});
+
+test('битая кука устройства не роняет сайт', async t => {
+  const server = await support.startServer();
+  t.after(() => server.stop());
+
+  const broken = await fetch(`${server.base}/songs`, { headers: { cookie: 'guitarnik_device=%E0%A4%A' } });
+  assert.equal(broken.status, 200, 'страница открывается с испорченной кукой');
+  const home = await fetch(`${server.base}/`, { headers: { cookie: 'guitarnik_device=' + 'x'.repeat(500) } });
+  assert.equal(home.status, 200, 'слишком длинная кука тоже не мешает');
+});
+
+test('отмененная песня пропадает из опубликованного лайнапа', async t => {
+  const server = await support.startServer();
+  t.after(() => server.stop());
+  const guest = support.createClient(server.base);
+  const admin = support.createClient(server.base);
+
+  await guest.post('/helpers/join', { participant_id: '__new__', new_name: 'Аня', help_instruments: 'вокал' });
+  const form = await guest.get('/add/perform');
+  const participantId = idFrom(form.text, 'p_');
+  await guest.post('/add/perform', { participant_id: participantId, title: 'Отменят меня' });
+  await guest.post('/add/perform', { participant_id: participantId, title: 'Останусь' });
+  const list = await guest.get('/songs');
+  const doomed = /\/songs\/(s_[A-Za-z0-9_-]{8})/.exec(list.text.slice(list.text.indexOf('Отменят меня') - 300))[1];
+
+  await admin.post('/admin/login', { password: support.ADMIN_PASSWORD });
+  await admin.post('/admin/lineup/fill', {});
+  await admin.post('/admin/lineup/publish', { publish: '1' });
+  const before = await guest.get('/lineup');
+  assert.match(before.text, /Отменят меня/);
+
+  await admin.post(`/admin/songs/${doomed}/status`, { status: 'отменена' });
+  const after = await guest.get('/lineup');
+  assert.equal(after.status, 200);
+  assert.doesNotMatch(after.text, /Отменят меня/, 'отмененная песня не висит в лайнапе');
+  assert.match(after.text, /Останусь/, 'остальные на месте');
 });
 
 test('вкладки, поиск и вид списка не сбрасывают друг друга', async t => {

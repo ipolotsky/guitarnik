@@ -60,7 +60,10 @@ router.post('/join', async (req, res) => {
       if (found == null) {
         throw new helpers.FormError('Выбери себя из списка');
       }
-      const patch = { can_help: true, help_instruments: helpInstruments };
+      const patch = { can_help: true };
+      if (helpInstruments.length > 0) {
+        patch.help_instruments = helpInstruments;
+      }
       if (about !== '') {
         patch.about = about;
       }

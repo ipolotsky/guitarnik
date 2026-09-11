@@ -21,7 +21,7 @@ router.get('/', async (req, res) => {
 
 const buildItems = async () => {
   const loaded = await Promise.all([data.getParticipants(), data.getSongs(), data.getLikes(), lineup.getItems()]);
-  const songs = helpers.enrichSongs(loaded[1], loaded[0], loaded[2]);
+  const songs = helpers.activeSongs(helpers.enrichSongs(loaded[1], loaded[0], loaded[2]));
   const byId = {};
   songs.forEach(x => {
     byId[x.id] = x;

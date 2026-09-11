@@ -68,8 +68,9 @@ router.post('/lineup/add-break', async (req, res) => {
 });
 
 router.post('/lineup/fill', async (req, res) => {
-  const songs = helpers.playableSongs(helpers.activeSongs(helpers.enrichSongs(await data.getSongs(), [], [])));
-  await lineup.fillFromSongs(songs.map(x => x.id));
+  const loaded = await Promise.all([data.getParticipants(), data.getSongs(), data.getLikes()]);
+  const songs = helpers.playableSongs(helpers.activeSongs(helpers.enrichSongs(loaded[1], loaded[0], loaded[2])));
+  await lineup.fillFromSongs(helpers.sortSongs(songs, 'likes').map(x => x.id));
   res.redirect(noticeUrl('lineup', 'filled'));
 });
 

@@ -25,15 +25,19 @@
 </div>
 <div class="mb-3">
   <span class="form-label">Кого-то нет в списке</span>
+  <% const partnerNames = partnerValues.partner_name == null ? [''] : [].concat(partnerValues.partner_name); -%>
+  <% const partnerInstruments = partnerValues.partner_instruments == null ? [] : [].concat(partnerValues.partner_instruments); -%>
   <div data-partners>
-    <div class="row g-2 mb-2">
-      <div class="col-12 col-sm-6">
-        <input class="form-control" type="text" name="partner_name" placeholder="Имя" aria-label="Имя нового человека">
+    <% (partnerNames.length === 0 ? [''] : partnerNames).forEach((name, i) => { %>
+      <div class="row g-2 mb-2">
+        <div class="col-12 col-sm-6">
+          <input class="form-control" type="text" name="partner_name" placeholder="Имя" aria-label="Имя нового человека" value="<%= name %>">
+        </div>
+        <div class="col-12 col-sm-6">
+          <input class="form-control" type="text" name="partner_instruments" placeholder="Инструменты через запятую" aria-label="Инструменты нового человека" value="<%= partnerInstruments[i] == null ? '' : partnerInstruments[i] %>">
+        </div>
       </div>
-      <div class="col-12 col-sm-6">
-        <input class="form-control" type="text" name="partner_instruments" placeholder="Инструменты через запятую" aria-label="Инструменты нового человека">
-      </div>
-    </div>
+    <% }) %>
   </div>
   <button class="btn btn-outline-secondary btn-sm" type="button" data-partners-add>Еще человек</button>
 </div>

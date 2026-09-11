@@ -1,4 +1,5 @@
 const path = require('path');
+const net = require('net');
 const { spawn } = require('child_process');
 const pg = require('pg');
 
@@ -33,7 +34,7 @@ async function startServer(options) {
   if (settings.keepData !== true) {
     await resetDatabase(connectionString);
   }
-  const port = 3200 + Math.floor(Math.random() * 600);
+  const port = await freePort();
   const child = spawn('node', [path.join(ROOT, 'server.js')], {
     cwd: ROOT,
     env: Object.assign({}, process.env, {
@@ -60,6 +61,17 @@ async function startServer(options) {
       child.kill('SIGTERM');
     }),
   };
+}
+
+function freePort() {
+  return new Promise((resolve, reject) => {
+    const probe = net.createServer();
+    probe.on('error', reject);
+    probe.listen(0, '127.0.0.1', () => {
+      const chosen = probe.address().port;
+      probe.close(() => resolve(chosen));
+    });
+  });
 }
 
 async function waitForReady(base, child, logs) {

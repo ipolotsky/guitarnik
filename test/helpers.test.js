@@ -20,6 +20,12 @@ test('telegramHandle отбивает мусор', () => {
   assert.equal(helpers.telegramHandle(null), null);
 });
 
+test('telegramHandle не делает ссылку из почты', () => {
+  assert.equal(helpers.telegramHandle('anya@example.com'), null);
+  assert.equal(helpers.telegramHandle('пишите на anya@example.com'), null);
+  assert.equal(helpers.telegramHandle('@anya'), 'anya', 'обычный ник по-прежнему работает');
+});
+
 test('safeHttpUrl пропускает только http и https', () => {
   assert.equal(helpers.safeHttpUrl('https://example.com/text'), 'https://example.com/text');
   assert.equal(helpers.safeHttpUrl('http://example.com'), 'http://example.com/');
