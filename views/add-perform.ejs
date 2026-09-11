@@ -17,7 +17,7 @@
   <% if (locals.twin != null) { %>
     <input type="hidden" name="confirm" value="1">
   <% } %>
-  <%- include('partials/who') %>
+  <%- include('partials/who', { whoRemember: false }) %>
 
   <div class="mb-3">
     <label class="form-label fw-semibold" for="title">Название песни</label>

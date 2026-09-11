@@ -670,8 +670,12 @@ test('заказ песни по умолчанию анонимный', async t
   assert.match(wishForm.text, /data-who-remember="0"/, 'на этой форме себя не подставляют');
 
   const performForm = await guest.get('/add/perform');
-  assert.match(performForm.text, /data-who-remember="1"/, 'на своей песне участник подставляется');
+  assert.match(performForm.text, /data-who-remember="0"/, 'при добавлении песни список начинается с выбора');
+  assert.match(performForm.text, /Выбери себя из списка/);
   assert.doesNotMatch(performForm.text, /Аноним, не указывать/);
+
+  const joinForm = await guest.get('/helpers/join');
+  assert.match(joinForm.text, /data-who-remember="1"/, 'в «Готов подыграть» участник по-прежнему подставляется');
 });
 
 test('битая кука устройства не роняет сайт', async t => {

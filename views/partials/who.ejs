@@ -1,13 +1,14 @@
 <% const whoValues = locals.values == null ? {} : locals.values; -%>
 <% const whoInstruments = whoValues.new_instruments == null ? [] : [].concat(whoValues.new_instruments); -%>
 <% const whoOptional = locals.whoOptional === true; -%>
+<% const whoRemember = locals.whoRemember !== false && !whoOptional; -%>
 <% const whoCrowded = participants.length > 10; -%>
 <div class="mb-3">
   <label class="form-label fw-semibold" for="participant_id">Кто ты?</label>
   <% if (whoCrowded) { %>
     <input class="form-control mb-2" type="search" placeholder="Начни печатать свое имя" aria-label="Поиск по участникам" data-who-search>
   <% } %>
-  <select class="form-select form-select-lg" id="participant_id" name="participant_id" data-who data-who-remember="<%= whoOptional ? '0' : '1' %>"<%= whoOptional ? '' : ' required' %>>
+  <select class="form-select form-select-lg" id="participant_id" name="participant_id" data-who data-who-remember="<%= whoRemember ? '1' : '0' %>"<%= whoOptional ? '' : ' required' %>>
     <option value="<%= '' %>"><%= whoOptional ? 'Аноним, не указывать' : 'Выбери себя из списка' %></option>
     <% participants.forEach(x => { %>
       <option value="<%= x.id %>" data-name="<%= x.name %>"<%= whoValues.participant_id === x.id ? ' selected' : '' %>><%= x.instruments ? x.name + ' - ' + x.instruments : x.name %></option>

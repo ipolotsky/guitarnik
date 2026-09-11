@@ -187,9 +187,9 @@ const MUTATIONS = [
     replace: "      name: bodyField(req, 'name'),",
   },
   {
-    name: 'форма заказа снова подставляет запомненного участника',
+    name: 'формы снова подставляют запомненного участника',
     file: 'views/partials/who.ejs',
-    find: `data-who-remember="<%= whoOptional ? '0' : '1' %>"`,
+    find: `data-who-remember="<%= whoRemember ? '1' : '0' %>"`,
     replace: 'data-who-remember="1"',
   },
   {
